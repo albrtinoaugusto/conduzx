@@ -1,0 +1,35 @@
+As escolas de condução em Moçambique registam os seus alunos no sistema do INATER, mas não têm um sistema próprio. Quando o INATER fica indisponível, o trabalho para: as inscrições ficam em papel, sem controle de quais já foram registadas e quais falharam. Também não existe um histórico interno confiável: quem se inscreveu, em que categoria, quanto já pagou e quanto falta. Se um aluno desaparece ou desiste, a escola tem de procurar em papéis.
+
+A solução é um sistema interno que regista cada aluno, a categoria escolhida e os pagamentos (inclusive parciais), e marca a inscrição como "pendente" quando o registo no INATER falha, para ser retomado depois sem se perder.
+# Atualizacao do problema - sistema espelho do INATRO
+
+As escolas de conducao em Mocambique dependem do INATRO para formalizar o registo dos candidatos a carta de conducao. Na pratica, porem, muitas escolas nao possuem um sistema interno proprio para controlar o processo antes, durante e depois da tentativa de registo no INATRO.
+
+Quando o sistema do INATRO esta indisponivel, lento, sem resposta, ou quando o atendimento precisa continuar mesmo sem concluir o registo oficial, a escola passa a depender de papel, mensagens, memoria dos funcionarios e ficheiros dispersos. Isso cria perda de informacao, duplicacao de cadastros, pagamentos sem historico claro, dificuldade para saber quem ficou pendente e pouca rastreabilidade sobre quem fez cada alteracao.
+
+O ConduzX resolve este problema como um sistema espelho interno da escola. Ele nao substitui o INATRO e nao tenta integrar com ele nesta fase. A funcao do ConduzX e manter, dentro da escola, um registo organizado e confiavel dos alunos, inscricoes, categorias de carta, pagamentos, documentos, tentativas de registo e estado manual do processo no INATRO.
+
+Assim, mesmo que o INATRO falhe, a escola continua a trabalhar: cadastra o aluno, escolhe a categoria, regista o pagamento total ou parcial, guarda o estado como pendente quando necessario e consegue voltar mais tarde para concluir o registo oficial. O atendente deixa de depender de papel solto, e o gestor passa a ter uma visao clara de pendencias, saldos e historico.
+
+O objetivo do MVP e cobrir o fluxo essencial da secretaria da escola:
+
+- Registar alunos com dados pessoais e contactos.
+- Criar inscricoes por categoria de carta.
+- Guardar o preco total da inscricao no momento da criacao.
+- Registar pagamentos por parcelas, sem usar valores calculados manualmente.
+- Calcular automaticamente valor pago, saldo e percentagem paga.
+- Controlar o estado do INATRO manualmente: nao registado, pendente ou registado.
+- Guardar numero de processo quando a inscricao for marcada como registada.
+- Manter historico das acoes importantes feitas pelos utilizadores.
+- Separar os dados por escola desde o primeiro dia.
+
+Fora do ambito do MVP:
+
+- Integracao automatica com o INATRO.
+- Substituicao do sistema oficial do INATRO.
+- Pagamentos online.
+- WhatsApp, chatbot ou inteligencia artificial operacional.
+- Aplicacao mobile nativa.
+- Relatorios avancados.
+- Modo offline completo.
+

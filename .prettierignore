@@ -1,0 +1,10 @@
+.next
+node_modules
+coverage
+dist
+package-lock.json
+AGENTS.md
+Claude.md
+prompt-mvp-escolas-conducao.md
+schema.sql
+storage

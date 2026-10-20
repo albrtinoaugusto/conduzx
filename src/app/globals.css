@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   ConduzX Design System — tokens
+   Valores em canais RGB para permitir opacidade no Tailwind (bg-brand/20).
+   ========================================================================== */
+:root {
+  color-scheme: dark;
+
+  /* Superfícies */
+  --night-950: 14 14 14; /* fundo da página */
+  --night-900: 24 24 24; /* contentor principal (shell) */
+  --night-850: 31 31 31; /* barra lateral */
+  --night-800: 40 40 40; /* cartões */
+  --night-700: 50 50 50; /* elementos elevados, inputs */
+  --night-600: 64 64 64; /* hover */
+  --night-500: 82 82 82;
+
+  /* Amarelo ConduzX */
+  --brand-200: 255 240 153;
+  --brand-300: 255 232 92;
+  --brand-400: 255 221 0;
+  --brand-500: 240 200 0;
+  --brand-600: 204 168 0;
+  --brand-ink: 20 20 20; /* texto sobre amarelo */
+
+  /* Texto e linhas */
+  --ink: 245 245 245;
+  --muted: 168 168 168;
+  --subtle: 115 115 115;
+  --line: 58 58 58;
+
+  /* Estados */
+  --success: 74 222 128;
+  --warning: 251 146 60;
+  --danger: 248 113 113;
+  --info: 96 165 250;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    background: rgb(var(--night-950));
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: rgb(var(--night-950));
+    color: rgb(var(--ink));
+    @apply font-sans antialiased;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  ::selection {
+    background: rgb(var(--brand-400));
+    color: rgb(var(--brand-ink));
+  }
+
+  :focus-visible {
+    outline: 2px solid rgb(var(--brand-400));
+    outline-offset: 2px;
+  }
+
+  /* Barras de scroll discretas */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--night-600)) transparent;
+  }
+}

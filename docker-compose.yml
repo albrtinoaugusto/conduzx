@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: conduzx-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: conduzx
+      POSTGRES_USER: conduzx
+      POSTGRES_PASSWORD: conduzx
+    ports:
+      - "5432:5432"
+    volumes:
+      - conduzx-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U conduzx -d conduzx"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  conduzx-postgres-data:
