@@ -25,7 +25,7 @@ export function SiteFooter({ activeSection = "Início" }: { activeSection?: stri
         <span aria-hidden="true" className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full border-[22px] border-night-950/10" />
         <div className="relative flex flex-wrap items-center justify-between gap-3 border-b border-brand-ink/20 pb-4">
           <p id="footer-title" className="text-sm font-semibold">
-            ConduzX — Gestão inteligente para escolas de condução
+            ConduzX - Gestão inteligente para escolas de condução
           </p>
           <p className="text-sm font-semibold opacity-70">{CONTACT.city}</p>
         </div>

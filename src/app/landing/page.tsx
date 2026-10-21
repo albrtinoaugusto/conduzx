@@ -19,7 +19,7 @@ import { CONTACT, demoMailto } from "@/components/site/contact";
 import { SiteFooter } from "@/components/site/site-footer";
 
 export const metadata: Metadata = {
-  title: "ConduzX — Gestão inteligente para escolas de condução",
+  title: "ConduzX - Gestão inteligente para escolas de condução",
   description:
     "Alunos, inscrições, pagamentos e pendências do INATRO sob controlo, num único sistema. A secretaria da sua escola de condução continua a trabalhar — mesmo quando o INATRO não responde.",
 };
@@ -226,9 +226,11 @@ export default function LandingPage() {
         {/* Conteúdo */}
         <div className="relative z-10 mx-auto grid max-w-7xl grid-cols-1 items-center gap-10 px-4 pb-16 pt-10 sm:px-8 lg:min-h-[calc(100svh-120px)] lg:grid-cols-[1fr_1.05fr] lg:pb-0 lg:pt-0">
           <div className="lg:pl-6">
+            {/* 
             <p className="mb-5 inline-flex items-center gap-2 rounded-full bg-night-800 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-brand ring-1 ring-brand/30">
               <span className="h-1.5 w-1.5 rounded-full bg-brand" /> Para escolas de condução em Moçambique
-            </p>
+            </p> 
+            */}
             <h1 className="font-display text-[3.2rem] font-black uppercase leading-[0.92] tracking-tight text-brand sm:text-7xl xl:text-[5.6rem]">
               Inscreva.
               <br />
@@ -242,7 +244,7 @@ export default function LandingPage() {
             <p className="mt-4 max-w-md text-sm leading-relaxed text-muted">
               O ConduzX é o sistema interno da sua secretaria. Alunos,
               inscrições, pagamentos em meticais e pendências do INATRO num
-              único lugar — com cada ação registada e cada metical rastreado.
+              único lugar com cada ação registada e cada metical rastreado.
               Acabaram-se os cadernos, as mensagens perdidas e as contas de
               cabeça.
             </p>
@@ -317,7 +319,7 @@ export default function LandingPage() {
         <Dots className="right-6 top-10 h-16 w-28 opacity-60" />
         <div className="mx-auto max-w-7xl px-4 sm:px-8">
           <SectionTitle kicker="Como funciona" title={<>Quatro passos. <span className="text-brand">Zero papel.</span></>}>
-            O mesmo fluxo que a sua equipa já conhece — agora rápido,
+            O mesmo fluxo que a sua equipa já conhece agora rápido,
             organizado e sem margem para esquecimentos.
           </SectionTitle>
           <ol className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
