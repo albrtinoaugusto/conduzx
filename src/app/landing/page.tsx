@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Logo } from "@/components/layout/logo";
-import { ButtonLink, Donut, FinanceiroBadge, InatroBadge, Progress } from "@/components/ui";
+import { ButtonLink, Donut, PaymentBadge, InatroBadge, Progress, buttonClasses } from "@/components/ui";
 import {
   IconArrowRight,
   IconCar,
@@ -16,11 +15,13 @@ import {
   IconUsers,
   IconWallet,
 } from "@/components/ui/icons";
+import { CONTACT, demoMailto } from "@/components/site/contact";
+import { SiteFooter } from "@/components/site/site-footer";
 
 export const metadata: Metadata = {
   title: "ConduzX — Gestão inteligente para escolas de condução",
   description:
-    "Alunos, inscrições, pagamentos e pendências do INATRO num só lugar. Feito para escolas de condução em Moçambique.",
+    "Alunos, inscrições, pagamentos e pendências do INATRO sob controlo, num único sistema. A secretaria da sua escola de condução continua a trabalhar — mesmo quando o INATRO não responde.",
 };
 
 const nav = [
@@ -31,20 +32,44 @@ const nav = [
   { href: "#contacto", label: "Contacto" },
 ];
 
-const funcionalidades = [
-  { icon: IconUsers, title: "Alunos organizados", text: "Ficha completa com BI, telefone e histórico de inscrições. Sem duplicados." },
-  { icon: IconClipboard, title: "Inscrições por categoria", text: "A, A1, B, C, D… O preço fica guardado no momento da inscrição." },
-  { icon: IconWallet, title: "Pagamentos por parcelas", text: "Total pago, saldo e percentagem calculados automaticamente, em Meticais." },
-  { icon: IconClock, title: "Pendências do INATRO", text: "Saiba exatamente quem falta registar quando o sistema oficial volta." },
-  { icon: IconHistory, title: "Histórico completo", text: "Quem criou, alterou ou anulou — cada ação fica registada." },
-  { icon: IconShield, title: "Pagamentos imutáveis", text: "Nada se apaga. Erros são anulados com motivo e responsável." },
+const features = [
+  {
+    icon: IconUsers,
+    title: "Um aluno, uma ficha",
+    text: "BI, contactos, documentos digitalizados e todas as inscrições no mesmo sítio. Se o BI já existir, o sistema avisa antes de criar um duplicado.",
+  },
+  {
+    icon: IconClipboard,
+    title: "Preço protegido",
+    text: "Cada inscrição guarda o preço da categoria no dia em que foi feita. Atualizou a tabela? As inscrições antigas mantêm o valor acordado.",
+  },
+  {
+    icon: IconWallet,
+    title: "Prestações sem contas de cabeça",
+    text: "Registe pagamentos totais ou parciais. Valor pago, saldo em falta e percentagem são calculados ao centavo, automaticamente.",
+  },
+  {
+    icon: IconClock,
+    title: "Pendências do INATRO à vista",
+    text: "Uma lista clara de quem falta registar, da mais antiga para a mais recente. Quando o sistema oficial voltar, sabe exatamente por onde começar.",
+  },
+  {
+    icon: IconHistory,
+    title: "Histórico para auditoria",
+    text: "Quem criou, alterou ou anulou — e quando. Cada ação relevante fica registada, para que nada dependa da memória de ninguém.",
+  },
+  {
+    icon: IconShield,
+    title: "Pagamentos à prova de erro",
+    text: "Nenhum pagamento é editado ou apagado. Um engano é anulado com motivo obrigatório e responsável identificado.",
+  },
 ];
 
-const passos = [
-  { n: "01", title: "Cadastrar aluno", text: "Nome, BI e contacto em menos de um minuto." },
-  { n: "02", title: "Criar inscrição", text: "Escolha a categoria de carta e o preço é fixado." },
-  { n: "03", title: "Registar pagamento", text: "Total ou parcial, em numerário, M-Pesa, e-Mola ou POS." },
-  { n: "04", title: "Marcar no INATRO", text: "Pendente ou registado, com número de processo." },
+const steps = [
+  { n: "01", title: "Registar o aluno", text: "Nome, BI e contacto. Em segundos, sem duplicados." },
+  { n: "02", title: "Criar a inscrição", text: "Escolha a categoria de carta — o preço fica fixado." },
+  { n: "03", title: "Receber o pagamento", text: "Total ou parcial, em numerário, M-Pesa, e-Mola ou transferência." },
+  { n: "04", title: "Acompanhar o INATRO", text: "Marque como pendente ou registado, com número de processo." },
 ];
 
 /* ---------- Elementos decorativos (inspirados na referência) ---------- */
@@ -89,7 +114,7 @@ function HeroPreview() {
               <p className="truncate text-sm font-bold text-ink">Ana Maria Cossa</p>
               <p className="text-[11px] text-subtle">Categoria B — Ligeiros</p>
             </div>
-            <InatroBadge estado="pendente" />
+            <InatroBadge status="pendente" />
           </div>
           <div className="mt-4 flex justify-between text-[11px]">
             <span className="text-muted">9.250 de 18.500 MT</span>
@@ -132,7 +157,7 @@ function HeroPreview() {
             <p className="truncate text-xs font-bold text-ink">Carlos Mondlane</p>
             <p className="text-[10px] text-subtle">A — Motociclos</p>
           </div>
-          <FinanceiroBadge estado="parcial" />
+          <PaymentBadge status="parcial" />
         </div>
       </div>
     </div>
@@ -189,11 +214,11 @@ export default function LandingPage() {
           </nav>
 
           <div className="flex items-center gap-4 pt-6">
-            <Link href="/" className="hidden text-sm font-semibold text-ink hover:text-brand sm:block">
+            <Link href="/login" className="hidden text-sm font-semibold text-ink hover:text-brand sm:block">
               Entrar
             </Link>
             <ButtonLink href="#contacto" variant="outline" size="sm" className="h-9">
-              Pedir demonstração
+              Agendar demonstração
             </ButtonLink>
           </div>
         </header>
@@ -202,24 +227,28 @@ export default function LandingPage() {
         <div className="relative z-10 mx-auto grid max-w-7xl grid-cols-1 items-center gap-10 px-4 pb-16 pt-10 sm:px-8 lg:min-h-[calc(100svh-120px)] lg:grid-cols-[1fr_1.05fr] lg:pb-0 lg:pt-0">
           <div className="lg:pl-6">
             <p className="mb-5 inline-flex items-center gap-2 rounded-full bg-night-800 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-brand ring-1 ring-brand/30">
-              <span className="h-1.5 w-1.5 rounded-full bg-brand" /> Feito para Moçambique
+              <span className="h-1.5 w-1.5 rounded-full bg-brand" /> Para escolas de condução em Moçambique
             </p>
             <h1 className="font-display text-[3.2rem] font-black uppercase leading-[0.92] tracking-tight text-brand sm:text-7xl xl:text-[5.6rem]">
-              Escola de
+              Inscreva.
               <br />
-              Condução
+              Cobre.
+              <br />
+              Controle.
             </h1>
             <p className="mt-5 font-display text-xl font-bold italic text-ink sm:text-2xl">
-              Gerida sem papel. Mesmo quando o INATRO falha.
+              Mesmo quando o INATRO não responde.
             </p>
             <p className="mt-4 max-w-md text-sm leading-relaxed text-muted">
-              O ConduzX é o sistema interno da sua secretaria: alunos,
-              inscrições, pagamentos em Meticais e pendências do INATRO —
-              tudo num só lugar, com histórico de cada ação.
+              O ConduzX é o sistema interno da sua secretaria. Alunos,
+              inscrições, pagamentos em meticais e pendências do INATRO num
+              único lugar — com cada ação registada e cada metical rastreado.
+              Acabaram-se os cadernos, as mensagens perdidas e as contas de
+              cabeça.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-5">
-              <ButtonLink href="/" size="lg" className="rounded-md uppercase tracking-wide">
-                Começar agora
+              <ButtonLink href="#contacto" size="lg" className="rounded-md uppercase tracking-wide">
+                Agendar demonstração
               </ButtonLink>
               <a
                 href="#como-funciona"
@@ -234,8 +263,8 @@ export default function LandingPage() {
             <HeroPreview />
             {/* Selo circular — equivalente ao "DISC 10%" */}
             <div className="absolute -top-12 right-2 flex h-28 w-28 flex-col sm:-left-10 sm:bottom-10 sm:right-auto sm:top-auto items-center justify-center rounded-full bg-brand text-center text-brand-ink shadow-glow ring-[6px] ring-night-900 sm:h-36 sm:w-36">
-              <span className="font-display text-3xl font-black leading-none sm:text-4xl">100%</span>
-              <span className="font-display text-sm font-extrabold uppercase">Digital</span>
+              <span className="font-display text-3xl font-black leading-none sm:text-4xl">0</span>
+              <span className="font-display text-sm font-extrabold uppercase leading-tight">Papel</span>
             </div>
             <RingDeco className="-left-14 top-16 h-8 w-8 border-[4px] max-sm:hidden" />
           </div>
@@ -246,10 +275,10 @@ export default function LandingPage() {
       <section className="relative border-y border-white/5 bg-night-850">
         <div className="mx-auto grid max-w-7xl grid-cols-2 gap-6 px-4 py-10 sm:px-8 lg:grid-cols-4">
           {[
-            ["3 min", "para inscrever um aluno"],
-            ["0", "pagamentos perdidos"],
+            ["4 passos", "do balcão ao recibo"],
+            ["0", "pagamentos apagados"],
             ["100%", "das ações com histórico"],
-            ["MZN", "valores exatos em centavos"],
+            ["Ao centavo", "saldos sempre certos"],
           ].map(([v, l]) => (
             <div key={l} className="text-center lg:text-left">
               <p className="font-display text-3xl font-black text-brand sm:text-4xl">{v}</p>
@@ -262,12 +291,13 @@ export default function LandingPage() {
       {/* ================= FUNCIONALIDADES ================= */}
       <section id="funcionalidades" className="relative mx-auto max-w-7xl px-4 py-24 sm:px-8">
         <RingDeco className="right-10 top-16 h-10 w-10 max-sm:hidden" />
-        <SectionTitle kicker="Funcionalidades" title={<>Tudo o que a secretaria <span className="text-brand">precisa</span></>}>
-          Pensado para o atendimento do dia a dia: formulários curtos, botões
-          claros e poucos cliques.
+        <SectionTitle kicker="Funcionalidades" title={<>Tudo o que a secretaria <span className="text-brand">precisa</span>. Nada que a atrase.</>}>
+          Desenhado para o balcão de atendimento: formulários curtos, botões
+          claros e o mínimo de cliques entre o aluno que chega e o recibo que
+          sai.
         </SectionTitle>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {funcionalidades.map(({ icon: Icon, title, text }) => (
+          {features.map(({ icon: Icon, title, text }) => (
             <div
               key={title}
               className="group rounded-3xl border border-white/5 bg-night-800 p-6 shadow-card transition hover:-translate-y-1 hover:border-brand/40"
@@ -286,14 +316,17 @@ export default function LandingPage() {
       <section id="como-funciona" className="relative bg-night-850 py-24">
         <Dots className="right-6 top-10 h-16 w-28 opacity-60" />
         <div className="mx-auto max-w-7xl px-4 sm:px-8">
-          <SectionTitle kicker="Como funciona" title="Quatro passos. Zero papel." />
+          <SectionTitle kicker="Como funciona" title={<>Quatro passos. <span className="text-brand">Zero papel.</span></>}>
+            O mesmo fluxo que a sua equipa já conhece — agora rápido,
+            organizado e sem margem para esquecimentos.
+          </SectionTitle>
           <ol className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
-            {passos.map((p, i) => (
+            {steps.map((p, i) => (
               <li key={p.n} className="relative rounded-3xl bg-night-900 p-6 ring-1 ring-white/5">
                 <span className="font-display text-5xl font-black text-brand/90">{p.n}</span>
                 <h3 className="mt-3 font-display text-lg font-bold text-ink">{p.title}</h3>
                 <p className="mt-2 text-sm text-muted">{p.text}</p>
-                {i < passos.length - 1 ? (
+                {i < steps.length - 1 ? (
                   <span className="absolute -right-4 top-1/2 z-10 hidden h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-brand text-brand-ink lg:flex">
                     <IconArrowRight size={16} strokeWidth={3} />
                   </span>
@@ -309,21 +342,23 @@ export default function LandingPage() {
         <div className="relative grid grid-cols-1 items-center gap-10 overflow-hidden rounded-[40px] bg-brand p-8 text-brand-ink sm:p-12 lg:grid-cols-[1.2fr_1fr]">
           <span aria-hidden="true" className="absolute -right-16 -top-16 h-64 w-64 rounded-full border-[18px] border-night-950/10" />
           <div className="relative">
-            <p className="text-xs font-extrabold uppercase tracking-[0.25em] opacity-70">O INATRO caiu?</p>
+            <p className="text-xs font-extrabold uppercase tracking-[0.25em] opacity-70">O INATRO está em baixo?</p>
             <h2 className="mt-3 font-display text-3xl font-black uppercase leading-tight sm:text-5xl">
-              A sua escola continua a funcionar.
+              A sua escola não para.
             </h2>
             <p className="mt-4 max-w-lg text-sm font-medium leading-relaxed opacity-80 sm:text-base">
-              O ConduzX não substitui o INATRO — é o espelho interno da sua
-              escola. Inscreva, receba e marque como pendente. Quando o sistema
-              oficial voltar, a lista de pendências diz exatamente o que falta.
+              O ConduzX não substitui o INATRO nem se liga a ele: é o registo
+              interno da sua escola. Continue a inscrever e a receber, e marque
+              a inscrição como pendente. Quando o sistema oficial voltar, a
+              lista de pendências mostra exatamente o que falta concluir — sem
+              perder um único aluno.
             </p>
           </div>
           <ul className="relative flex flex-col gap-3">
             {[
-              ["Não registado", "Ainda sem tentativa no INATRO"],
-              ["Pendente", "Sistema lento ou indisponível"],
-              ["Registado", "Com número de processo"],
+              ["Não registado", "Ainda não houve tentativa no INATRO"],
+              ["Pendente", "Sistema lento, indisponível ou submissão por concluir"],
+              ["Registado", "Concluído, com número de processo"],
             ].map(([t, d], i) => (
               <li key={t} className="flex items-center gap-4 rounded-2xl bg-night-950 p-4 text-ink">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand font-display font-black text-brand-ink">
@@ -348,29 +383,31 @@ export default function LandingPage() {
             <IconFile size={28} />
           </span>
           <h2 className="font-display text-3xl font-black uppercase leading-tight sm:text-5xl">
-            Pronto para deixar o <span className="text-brand">caderno</span>?
+            Pronto para arrumar o <span className="text-brand">caderno</span>?
           </h2>
           <p className="mt-4 text-sm text-muted sm:text-base">
-            Fale connosco e mostramos o ConduzX a funcionar com os dados da sua escola.
+            Agende uma demonstração e veja o ConduzX a funcionar com o fluxo
+            real da sua secretaria. Respondemos a todas as dúvidas antes de
+            começar.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <ButtonLink href="/" size="lg" className="rounded-md uppercase">
-              Pedir demonstração
-            </ButtonLink>
-            <ButtonLink href="/" size="lg" variant="outline" className="rounded-md uppercase">
-              Entrar no sistema
-            </ButtonLink>
+            <a href={demoMailto} className={buttonClasses("primary", "lg", "rounded-md uppercase")}>
+              Agendar demonstração
+            </a>
+            <a href={CONTACT.phoneHref} className={buttonClasses("outline", "lg", "rounded-md uppercase")}>
+              Ligar {CONTACT.phone}
+            </a>
           </div>
+          <p className="mt-6 text-xs text-subtle">
+            Já é cliente?{" "}
+            <Link href="/login" className="font-semibold text-brand hover:underline">
+              Entrar no sistema
+            </Link>
+          </p>
         </div>
       </section>
 
-      <footer className="border-t border-white/5 bg-night-950">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-8 text-xs text-subtle sm:flex-row sm:px-8">
-          <Logo />
-          <p>© 2026 ConduzX · Gestão inteligente para escolas de condução</p>
-          <p>Maputo, Moçambique</p>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

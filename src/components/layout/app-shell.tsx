@@ -6,7 +6,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { IconBell, IconMenu, IconSearch } from "@/components/ui/icons";
 import { Logo } from "./logo";
-import { pageTitles, type UtilizadorShell } from "./nav-items";
+import { pageTitles, type ShellUser } from "./nav-items";
 import { Sidebar } from "./sidebar";
 
 function titleFor(pathname: string) {
@@ -20,12 +20,12 @@ function titleFor(pathname: string) {
 
 export function AppShell({
   children,
-  utilizador,
-  pendentes,
+  user,
+  pending,
 }: {
   children: ReactNode;
-  utilizador: UtilizadorShell;
-  pendentes: number;
+  user: ShellUser;
+  pending: number;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -38,7 +38,7 @@ export function AppShell({
         {/* Barra lateral — desktop */}
         <aside className="hidden w-64 shrink-0 lg:block">
           <div className="sticky top-5 h-[calc(100vh-2.5rem)] overflow-y-auto">
-            <Sidebar utilizador={utilizador} pendentes={pendentes} />
+            <Sidebar user={user} pending={pending} />
           </div>
         </aside>
 
@@ -56,7 +56,7 @@ export function AppShell({
             open ? "translate-x-0" : "-translate-x-full",
           )}
         >
-          <Sidebar utilizador={utilizador} pendentes={pendentes} onNavigate={() => setOpen(false)} />
+          <Sidebar user={user} pending={pending} onNavigate={() => setOpen(false)} />
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
@@ -74,7 +74,7 @@ export function AppShell({
             </span>
             <h1 className="hidden font-display text-2xl font-bold text-ink lg:block">{titleFor(pathname)}</h1>
             <div className="ml-auto flex items-center gap-3">
-              {!utilizador.superAdmin ? <form action="/alunos" method="get" role="search" className="relative hidden w-80 md:block">
+              {!user.superAdmin ? <form action="/alunos" method="get" role="search" className="relative hidden w-80 md:block">
                 <input
                   type="search"
                   name="q"
@@ -85,14 +85,14 @@ export function AppShell({
                   <IconSearch size={16} />
                 </button>
               </form> : null}
-              {!utilizador.superAdmin ? <Link
+              {!user.superAdmin ? <Link
                 href="/pendencias"
                 className="relative flex h-10 w-10 items-center justify-center rounded-full bg-night-700 text-ink shadow-raised transition hover:bg-night-600"
-                aria-label={`${pendentes} pendências no INATRO`}
-                title={`${pendentes} pendências no INATRO`}
+                aria-label={`${pending} pendências no INATRO`}
+                title={`${pending} pendências no INATRO`}
               >
                 <IconBell size={18} />
-                {pendentes > 0 ? (
+                {pending > 0 ? (
                   <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-brand ring-2 ring-night-700" />
                 ) : null}
               </Link> : null}

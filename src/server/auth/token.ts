@@ -6,12 +6,12 @@ import { createHmac, timingSafeEqual } from "node:crypto";
  * na base de dados em cada pedido, por isso desativar um utilizador
  * termina o acesso de imediato.
  */
-export const COOKIE_SESSAO = "conduzx_sessao";
-export const DURACAO_SESSAO_S = 60 * 60 * 12; // 12 horas
+export const SESSION_COOKIE = "conduzx_sessao";
+export const SESSION_DURATION_S = 60 * 60 * 12; // 12 horas
 
 type Payload = { uid: string; exp: number };
 
-function segredo() {
+function secret() {
   const s = process.env.SESSION_SECRET;
   if (!s || s.length < 32) {
     throw new Error("SESSION_SECRET em falta ou demasiado curto (mín. 32 caracteres).");
@@ -19,30 +19,30 @@ function segredo() {
   return s;
 }
 
-function assinar(dados: string) {
-  return createHmac("sha256", segredo()).update(dados).digest("base64url");
+function sign(data: string) {
+  return createHmac("sha256", secret()).update(data).digest("base64url");
 }
 
-export function criarToken(uid: string, agora = Date.now()): string {
-  const payload: Payload = { uid, exp: Math.floor(agora / 1000) + DURACAO_SESSAO_S };
-  const dados = Buffer.from(JSON.stringify(payload)).toString("base64url");
-  return `${dados}.${assinar(dados)}`;
+export function createToken(uid: string, now = Date.now()): string {
+  const payload: Payload = { uid, exp: Math.floor(now / 1000) + SESSION_DURATION_S };
+  const data = Buffer.from(JSON.stringify(payload)).toString("base64url");
+  return `${data}.${sign(data)}`;
 }
 
-export function lerToken(token: string | undefined, agora = Date.now()): string | null {
+export function readToken(token: string | undefined, now = Date.now()): string | null {
   if (!token) return null;
-  const [dados, assinatura] = token.split(".");
-  if (!dados || !assinatura) return null;
+  const [data, signature] = token.split(".");
+  if (!data || !signature) return null;
 
-  const esperada = Buffer.from(assinar(dados));
-  const recebida = Buffer.from(assinatura);
-  if (esperada.length !== recebida.length || !timingSafeEqual(esperada, recebida)) {
+  const expected = Buffer.from(sign(data));
+  const received = Buffer.from(signature);
+  if (expected.length !== received.length || !timingSafeEqual(expected, received)) {
     return null;
   }
 
   try {
-    const payload = JSON.parse(Buffer.from(dados, "base64url").toString()) as Payload;
-    if (typeof payload.uid !== "string" || payload.exp * 1000 < agora) return null;
+    const payload = JSON.parse(Buffer.from(data, "base64url").toString()) as Payload;
+    if (typeof payload.uid !== "string" || payload.exp * 1000 < now) return null;
     return payload.uid;
   } catch {
     return null;

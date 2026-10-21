@@ -2,11 +2,11 @@ import { NextResponse, type NextRequest } from "next/server";
 
 // Verificação leve: só confirma a existência do cookie.
 // A assinatura e o estado do utilizador são validados no servidor (sessao.ts).
-const PUBLICAS = ["/login", "/landing"];
+const PUBLIC_PATHS = ["/login", "/landing", "/privacy", "/privary", "/terms-of-use"];
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  if (PUBLICAS.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+  if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
     return NextResponse.next();
   }
   if (!req.cookies.has("conduzx_sessao")) {

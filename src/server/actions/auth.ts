@@ -1,27 +1,27 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { iniciarSessao, terminarSessao } from "@/server/auth/sessao";
-import type { EstadoForm } from "@/server/erros";
-import { autenticar } from "@/server/services/utilizadores";
-import { errosZod, formParaObjeto, loginSchema } from "@/server/validation/esquemas";
-import { erroParaEstado, invalido } from "./util";
+import { startSession, endSession } from "@/server/auth/session";
+import type { FormState } from "@/server/errors";
+import { authenticate } from "@/server/services/users";
+import { zodErrors, formToObject, loginSchema } from "@/server/validation/schemas";
+import { errorToState, invalid } from "./util";
 
-export async function entrarAction(_: EstadoForm, fd: FormData): Promise<EstadoForm> {
-  const r = loginSchema.safeParse(formParaObjeto(fd));
-  if (!r.success) return invalido(errosZod(r.error));
+export async function signInAction(_: FormState, fd: FormData): Promise<FormState> {
+  const r = loginSchema.safeParse(formToObject(fd));
+  if (!r.success) return invalid(zodErrors(r.error));
 
   try {
-    const uid = await autenticar(r.data.email, r.data.password);
-    if (!uid) return { erro: "Email ou palavra-passe incorretos.", t: Date.now() };
-    iniciarSessao(uid);
+    const uid = await authenticate(r.data.email, r.data.password);
+    if (!uid) return { error: "Email ou palavra-passe incorretos.", t: Date.now() };
+    startSession(uid);
   } catch (e) {
-    return erroParaEstado(e);
+    return errorToState(e);
   }
   redirect("/");
 }
 
-export async function sairAction() {
-  terminarSessao();
+export async function signOutAction() {
+  endSession();
   redirect("/login");
 }

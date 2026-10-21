@@ -47,30 +47,30 @@ export function Badge({
 
 /* Mapeamentos dos estados do domínio para tons visuais */
 
-export type EstadoFinanceiro = "sem_pagamento" | "parcial" | "pago";
-export type EstadoInatro = "nao_registado" | "pendente" | "registado";
-export type EstadoAluno = "ativo" | "desistiu" | "concluido";
+export type FinancialStatus = "sem_pagamento" | "parcial" | "pago";
+export type InatroStatus = "nao_registado" | "pendente" | "registado";
+export type StudentStatus = "ativo" | "desistiu" | "concluido";
 
-const financeiro: Record<EstadoFinanceiro, [BadgeTone, string]> = {
+const financial: Record<FinancialStatus, [BadgeTone, string]> = {
   sem_pagamento: ["danger", "Sem pagamento"],
   parcial: ["warning", "Parcial"],
   pago: ["success", "Pago"],
 };
 
-const inatro: Record<EstadoInatro, [BadgeTone, string]> = {
+const inatro: Record<InatroStatus, [BadgeTone, string]> = {
   nao_registado: ["neutral", "Não registado"],
   pendente: ["brand", "Pendente"],
   registado: ["info", "Registado"],
 };
 
-const aluno: Record<EstadoAluno, [BadgeTone, string]> = {
+const student: Record<StudentStatus, [BadgeTone, string]> = {
   ativo: ["success", "Ativo"],
   desistiu: ["danger", "Desistiu"],
   concluido: ["info", "Concluído"],
 };
 
-export function FinanceiroBadge({ estado }: { estado: EstadoFinanceiro }) {
-  const [tone, label] = financeiro[estado];
+export function PaymentBadge({ status }: { status: FinancialStatus }) {
+  const [tone, label] = financial[status];
   return (
     <Badge tone={tone} dot>
       {label}
@@ -78,8 +78,8 @@ export function FinanceiroBadge({ estado }: { estado: EstadoFinanceiro }) {
   );
 }
 
-export function InatroBadge({ estado }: { estado: EstadoInatro }) {
-  const [tone, label] = inatro[estado];
+export function InatroBadge({ status }: { status: InatroStatus }) {
+  const [tone, label] = inatro[status];
   return (
     <Badge tone={tone} dot>
       {label}
@@ -87,7 +87,7 @@ export function InatroBadge({ estado }: { estado: EstadoInatro }) {
   );
 }
 
-export function AlunoBadge({ estado }: { estado: EstadoAluno }) {
-  const [tone, label] = aluno[estado];
+export function StudentBadge({ status }: { status: StudentStatus }) {
+  const [tone, label] = student[status];
   return <Badge tone={tone}>{label}</Badge>;
 }

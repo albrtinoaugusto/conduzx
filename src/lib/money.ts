@@ -7,41 +7,41 @@ export function parseMeticais(input: string): number | null {
   let s = input.trim().replace(/\s| | /g, "").replace(/mtn?$/i, "");
   if (!s || s.startsWith("-")) return null;
 
-  let inteiro: string;
+  let integer: string;
   let decimal = "";
 
   if (s.includes(",")) {
     // Vírgula é o separador decimal (PT); pontos são milhares.
-    const partes = s.split(",");
-    if (partes.length !== 2) return null;
-    inteiro = partes[0].replace(/\./g, "");
-    decimal = partes[1];
+    const parts = s.split(",");
+    if (parts.length !== 2) return null;
+    integer = parts[0].replace(/\./g, "");
+    decimal = parts[1];
   } else if (s.includes(".")) {
-    const partes = s.split(".");
-    const ultima = partes[partes.length - 1];
-    if (partes.length > 2 || ultima.length === 3) {
+    const parts = s.split(".");
+    const latest = parts[parts.length - 1];
+    if (parts.length > 2 || latest.length === 3) {
       // "1.500" ou "1.500.000" → separador de milhares
-      if (partes.slice(1).some((p) => p.length !== 3)) return null;
-      inteiro = partes.join("");
+      if (parts.slice(1).some((p) => p.length !== 3)) return null;
+      integer = parts.join("");
     } else {
-      inteiro = partes[0];
-      decimal = ultima;
+      integer = parts[0];
+      decimal = latest;
     }
   } else {
-    inteiro = s;
+    integer = s;
   }
 
-  s = inteiro;
+  s = integer;
   if (!/^\d+$/.test(s) || !/^\d{0,2}$/.test(decimal)) return null;
   if (s.length > 13) return null;
 
-  const centavos = Number(s) * 100 + Number(decimal.padEnd(2, "0") || "0");
-  return Number.isSafeInteger(centavos) ? centavos : null;
+  const cents = Number(s) * 100 + Number(decimal.padEnd(2, "0") || "0");
+  return Number.isSafeInteger(cents) ? cents : null;
 }
 
 /** Centavos → texto para preencher um campo de formulário ("1500,50"). */
-export function centavosParaInput(centavos: number): string {
-  const inteiro = Math.trunc(centavos / 100);
-  const resto = centavos % 100;
-  return resto === 0 ? String(inteiro) : `${inteiro},${String(resto).padStart(2, "0")}`;
+export function centsToInput(cents: number): string {
+  const integer = Math.trunc(cents / 100);
+  const remainder = cents % 100;
+  return remainder === 0 ? String(integer) : `${integer},${String(remainder).padStart(2, "0")}`;
 }

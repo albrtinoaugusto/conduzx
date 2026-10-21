@@ -9,16 +9,16 @@ import {
   IconWallet,
 } from "@/components/ui/icons";
 
-export type UtilizadorShell = {
-  nome: string;
-  papel: string;
-  escola: string;
-  verHistorico: boolean;
+export type ShellUser = {
+  name: string;
+  role: string;
+  school: string;
+  canViewHistory: boolean;
   admin: boolean;
   superAdmin: boolean;
 };
 
-export const navPrincipal = [
+export const mainNav = [
   { href: "/", label: "Painel", icon: IconDashboard },
   { href: "/alunos", label: "Alunos", icon: IconUsers },
   { href: "/inscricoes", label: "Inscrições", icon: IconClipboard },
@@ -26,17 +26,17 @@ export const navPrincipal = [
   { href: "/pendencias", label: "Pendências", icon: IconClock },
 ];
 
-export const navSuperAdmin = [
+export const superAdminNav = [
   { href: "/admin", label: "Visão geral", icon: IconDashboard },
   { href: "/admin/empresas", label: "Empresas", icon: IconUsers },
   { href: "/admin/admins", label: "Administradores", icon: IconUserCog },
 ];
 
-export function navGestao(u: UtilizadorShell) {
+export function managementNav(u: ShellUser) {
   return [
     ...(u.admin ? [{ href: "/categorias", label: "Categorias", icon: IconTag }] : []),
     ...(u.admin ? [{ href: "/utilizadores", label: "Utilizadores", icon: IconUserCog }] : []),
-    ...(u.verHistorico ? [{ href: "/historico", label: "Histórico", icon: IconHistory }] : []),
+    ...(u.canViewHistory ? [{ href: "/historico", label: "Histórico", icon: IconHistory }] : []),
   ];
 }
 

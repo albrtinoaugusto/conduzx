@@ -2,7 +2,7 @@
 
 import { useRef, type ReactNode } from "react";
 import { Button, type ButtonSize, type ButtonVariant } from "@/components/ui/button";
-import { ActionForm, FormAlert, SubmitButton, type AcaoForm } from "./form";
+import { ActionForm, FormAlert, SubmitButton, type FormAction } from "./form";
 
 /**
  * Botão que abre um <dialog> com um formulário ligado a uma server action.
@@ -28,7 +28,7 @@ export function ModalForm({
   triggerClassName?: string;
   title: string;
   description?: ReactNode;
-  action: AcaoForm;
+  action: FormAction;
   submitLabel: string;
   submitVariant?: ButtonVariant;
   children: ReactNode;
@@ -53,7 +53,7 @@ export function ModalForm({
           if (e.target === ref.current) ref.current?.close();
         }}
       >
-        <ActionForm action={action} onSucesso={() => ref.current?.close()} limparAoSucesso className="flex flex-col gap-4 p-6">
+        <ActionForm action={action} onSuccess={() => ref.current?.close()} resetOnSuccess className="flex flex-col gap-4 p-6">
           <div>
             <h2 className="font-display text-lg font-bold">{title}</h2>
             {description ? <p className="mt-1 text-sm text-muted">{description}</p> : null}

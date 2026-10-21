@@ -1,11 +1,11 @@
-import type { EstadoInatro } from "@/server/db/schema";
+import type { InatroStatus } from "@/server/db/schema";
 
 /** Valida a mudança de estado no INATRO. Devolve mensagem de erro ou null. */
-export function validarEstadoInatro(
-  estado: EstadoInatro,
-  numeroProcesso: string | null | undefined,
+export function validateInatroStatus(
+  status: InatroStatus,
+  processNumber: string | null | undefined,
 ): string | null {
-  if (estado === "registado" && !numeroProcesso?.trim()) {
+  if (status === "registado" && !processNumber?.trim()) {
     return "Indique o número de processo do INATRO para marcar como registado.";
   }
   return null;

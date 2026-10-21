@@ -13,140 +13,140 @@ const PASSWORD = "conduzx123";
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const db = drizzle(pool, { schema: s });
 
-const diasAtras = (n: number) => new Date(Date.now() - n * 86_400_000);
-const dataISO = (d: Date) => d.toISOString().slice(0, 10);
+const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000);
+const isoDate = (d: Date) => d.toISOString().slice(0, 10);
 
 async function main() {
   await db.execute(
     `TRUNCATE historico, documentos, pagamentos, inscricoes, categorias, alunos, utilizadores, escolas RESTART IDENTITY CASCADE`,
   );
 
-  const [escola] = await db
-    .insert(s.escolas)
-    .values({ nome: "Escola de Condução Boa Estrada", telefone: "21 300 400" })
+  const [school] = await db
+    .insert(s.schools)
+    .values({ name: "Escola de Condução Boa Estrada", phone: "21 300 400" })
     .returning();
 
   const hash = await bcrypt.hash(PASSWORD, 10);
   const [admin, gestor, atendente] = await db
-    .insert(s.utilizadores)
+    .insert(s.users)
     .values([
-      { escolaId: escola.id, nome: "Ana Admin", email: "admin@conduzx.test", passwordHash: hash, papel: "admin" },
-      { escolaId: escola.id, nome: "Rui Gestor", email: "gestor@conduzx.test", passwordHash: hash, papel: "gestor" },
-      { escolaId: escola.id, nome: "Helena Macamo", email: "atendente@conduzx.test", passwordHash: hash, papel: "atendente" },
+      { schoolId: school.id, name: "Ana Admin", email: "admin@conduzx.test", passwordHash: hash, role: "admin" },
+      { schoolId: school.id, name: "Rui Gestor", email: "gestor@conduzx.test", passwordHash: hash, role: "gestor" },
+      { schoolId: school.id, name: "Helena Macamo", email: "atendente@conduzx.test", passwordHash: hash, role: "atendente" },
     ])
     .returning();
 
   // Segunda escola — serve para confirmar que os dados não se misturam.
-  const [outra] = await db.insert(s.escolas).values({ nome: "Escola Rival (teste)" }).returning();
-  await db.insert(s.utilizadores).values({
-    escolaId: outra.id,
-    nome: "Utilizador Outra Escola",
+  const [otherSchool] = await db.insert(s.schools).values({ name: "Escola Rival (teste)" }).returning();
+  await db.insert(s.users).values({
+    schoolId: otherSchool.id,
+    name: "Utilizador Outra Escola",
     email: "outra@conduzx.test",
     passwordHash: hash,
-    papel: "admin",
+    role: "admin",
   });
 
   const cats = await db
-    .insert(s.categorias)
+    .insert(s.categories)
     .values([
-      { escolaId: escola.id, codigo: "A", nome: "A — Motociclos", precoCentavos: 950_000 },
-      { escolaId: escola.id, codigo: "A1", nome: "A1 — Motociclos leves", precoCentavos: 750_000 },
-      { escolaId: escola.id, codigo: "B", nome: "B — Ligeiros", precoCentavos: 1_850_000 },
-      { escolaId: escola.id, codigo: "C", nome: "C — Pesados", precoCentavos: 3_200_000 },
-      { escolaId: escola.id, codigo: "D", nome: "D — Passageiros", precoCentavos: 3_800_000 },
+      { schoolId: school.id, code: "A", name: "A — Motociclos", priceCents: 950_000 },
+      { schoolId: school.id, code: "A1", name: "A1 — Motociclos leves", priceCents: 750_000 },
+      { schoolId: school.id, code: "B", name: "B — Ligeiros", priceCents: 1_850_000 },
+      { schoolId: school.id, code: "C", name: "C — Pesados", priceCents: 3_200_000 },
+      { schoolId: school.id, code: "D", name: "D — Passageiros", priceCents: 3_800_000 },
     ])
     .returning();
-  const cat = Object.fromEntries(cats.map((c) => [c.codigo, c]));
+  const cat = Object.fromEntries(cats.map((c) => [c.code, c]));
 
-  type Caso = {
-    nome: string;
-    nasc: string;
-    bi?: string;
+  type SeedCase = {
+    name: string;
+    birth: string;
+    idNo?: string;
     tel: string;
     cat: string;
-    dias: number;
-    pagamentos?: Array<[number, s.MetodoPagamento, number]>; // [% do total, método, dias atrás]
-    anulado?: [number, s.MetodoPagamento, string];
-    inatro?: s.EstadoInatro;
-    processo?: string;
-    nota?: string;
-    estadoAluno?: s.EstadoAluno;
+    days: number;
+    payments?: Array<[number, s.PaymentMethod, number]>; // [% do total, método, dias atrás]
+    voided?: [number, s.PaymentMethod, string];
+    inatro?: s.InatroStatus;
+    processNo?: string;
+    note?: string;
+    studentStatus?: s.StudentStatus;
   };
 
-  const casos: Caso[] = [
-    { nome: "Albertino Mucavele", nasc: "1999-04-12", bi: "110100123456A", tel: "84 123 4567", cat: "B", dias: 1, pagamentos: [[30, "mpesa", 1]], inatro: "pendente", nota: "INATRO indisponível às 10h." },
-    { nome: "Ana Maria Cossa", nasc: "2001-08-02", bi: "110100223344B", tel: "84 222 3344", cat: "B", dias: 2, pagamentos: [[50, "dinheiro", 2], [50, "transferencia", 1]], inatro: "registado", processo: "MPT-2026-08812" },
-    { nome: "Carlos Alberto Mondlane", nasc: "1995-01-20", bi: "110200654321C", tel: "82 765 4321", cat: "A", dias: 3, pagamentos: [[40, "dinheiro", 3]], inatro: "pendente", nota: "Sistema lento, submissão não concluída." },
-    { nome: "Fátima Nhantumbo", nasc: "2003-11-15", tel: "86 222 1100", cat: "B", dias: 4 },
-    { nome: "Joaquim Sitoe", nasc: "1988-06-30", bi: "110300998877D", tel: "84 909 8877", cat: "C", dias: 6, pagamentos: [[50, "emola", 6]], inatro: "pendente", nota: "Falta atestado médico." },
-    { nome: "Luísa Macuácua", nasc: "2000-02-10", bi: "110400334455E", tel: "87 333 4455", cat: "B", dias: 8, pagamentos: [[100, "mpesa", 8]], inatro: "nao_registado" },
-    { nome: "Pedro Langa", nasc: "1997-09-09", bi: "110500556677F", tel: "84 555 6677", cat: "A1", dias: 20, pagamentos: [[100, "dinheiro", 20]], inatro: "registado", processo: "MPT-2026-08790", estadoAluno: "concluido" },
-    { nome: "Rosa Tembe", nasc: "1993-12-01", bi: "110600112233G", tel: "82 111 2233", cat: "B", dias: 12, pagamentos: [[50, "dinheiro", 12]], anulado: [20, "emola", "Valor digitado errado"], inatro: "registado", processo: "MPT-2026-08771" },
-    { nome: "Sérgio Chissano", nasc: "1990-03-25", bi: "110700440099H", tel: "85 444 0099", cat: "D", dias: 25, pagamentos: [[10, "dinheiro", 25]], estadoAluno: "desistiu" },
-    { nome: "Teresa Uamusse", nasc: "2002-07-18", tel: "84 777 8899", cat: "A", dias: 0, inatro: "nao_registado" },
+  const cases: SeedCase[] = [
+    { name: "Albertino Mucavele", birth: "1999-04-12", idNo: "110100123456A", tel: "84 123 4567", cat: "B", days: 1, payments: [[30, "mpesa", 1]], inatro: "pendente", note: "INATRO indisponível às 10h." },
+    { name: "Ana Maria Cossa", birth: "2001-08-02", idNo: "110100223344B", tel: "84 222 3344", cat: "B", days: 2, payments: [[50, "dinheiro", 2], [50, "transferencia", 1]], inatro: "registado", processNo: "MPT-2026-08812" },
+    { name: "Carlos Alberto Mondlane", birth: "1995-01-20", idNo: "110200654321C", tel: "82 765 4321", cat: "A", days: 3, payments: [[40, "dinheiro", 3]], inatro: "pendente", note: "Sistema lento, submissão não concluída." },
+    { name: "Fátima Nhantumbo", birth: "2003-11-15", tel: "86 222 1100", cat: "B", days: 4 },
+    { name: "Joaquim Sitoe", birth: "1988-06-30", idNo: "110300998877D", tel: "84 909 8877", cat: "C", days: 6, payments: [[50, "emola", 6]], inatro: "pendente", note: "Falta atestado médico." },
+    { name: "Luísa Macuácua", birth: "2000-02-10", idNo: "110400334455E", tel: "87 333 4455", cat: "B", days: 8, payments: [[100, "mpesa", 8]], inatro: "nao_registado" },
+    { name: "Pedro Langa", birth: "1997-09-09", idNo: "110500556677F", tel: "84 555 6677", cat: "A1", days: 20, payments: [[100, "dinheiro", 20]], inatro: "registado", processNo: "MPT-2026-08790", studentStatus: "concluido" },
+    { name: "Rosa Tembe", birth: "1993-12-01", idNo: "110600112233G", tel: "82 111 2233", cat: "B", days: 12, payments: [[50, "dinheiro", 12]], voided: [20, "emola", "Valor introduzido por engano"], inatro: "registado", processNo: "MPT-2026-08771" },
+    { name: "Sérgio Chissano", birth: "1990-03-25", idNo: "110700440099H", tel: "85 444 0099", cat: "D", days: 25, payments: [[10, "dinheiro", 25]], studentStatus: "desistiu" },
+    { name: "Teresa Uamusse", birth: "2002-07-18", tel: "84 777 8899", cat: "A", days: 0, inatro: "nao_registado" },
   ];
 
-  for (const c of casos) {
-    const criador = c.dias % 2 === 0 ? atendente : gestor;
-    const [aluno] = await db
-      .insert(s.alunos)
+  for (const c of cases) {
+    const creator = c.days % 2 === 0 ? atendente : gestor;
+    const [student] = await db
+      .insert(s.students)
       .values({
-        escolaId: escola.id,
-        nomeCompleto: c.nome,
-        dataNascimento: c.nasc,
-        biNumero: c.bi ?? null,
-        telefone: c.tel,
-        criadoPor: criador.id,
-        criadoEm: diasAtras(c.dias),
+        schoolId: school.id,
+        fullName: c.name,
+        birthDate: c.birth,
+        idNumber: c.idNo ?? null,
+        phone: c.tel,
+        createdBy: creator.id,
+        createdAt: daysAgo(c.days),
       })
       .returning();
-    const categoria = cat[c.cat];
-    const [insc] = await db
-      .insert(s.inscricoes)
+    const category = cat[c.cat];
+    const [enr] = await db
+      .insert(s.enrollments)
       .values({
-        escolaId: escola.id,
-        alunoId: aluno.id,
-        categoriaId: categoria.id,
-        precoTotalCentavos: categoria.precoCentavos,
-        estadoAluno: c.estadoAluno ?? "ativo",
-        estadoInatro: c.inatro ?? "nao_registado",
-        inatroNumeroProcesso: c.processo ?? null,
-        inatroNota: c.nota ?? null,
-        inatroUltimaTentativa: c.inatro === "pendente" ? diasAtras(c.dias) : null,
-        dataInscricao: dataISO(diasAtras(c.dias)),
-        criadoPor: criador.id,
-        criadoEm: diasAtras(c.dias),
+        schoolId: school.id,
+        studentId: student.id,
+        categoryId: category.id,
+        totalPriceCents: category.priceCents,
+        studentStatus: c.studentStatus ?? "ativo",
+        inatroStatus: c.inatro ?? "nao_registado",
+        inatroProcessNumber: c.processNo ?? null,
+        inatroNote: c.note ?? null,
+        inatroLastAttempt: c.inatro === "pendente" ? daysAgo(c.days) : null,
+        enrollmentDate: isoDate(daysAgo(c.days)),
+        createdBy: creator.id,
+        createdAt: daysAgo(c.days),
       })
       .returning();
 
-    const hist: Array<typeof s.historico.$inferInsert> = [
-      { escolaId: escola.id, utilizadorId: criador.id, entidade: "aluno", entidadeId: aluno.id, acao: "criou", dados: { nome: c.nome }, criadoEm: diasAtras(c.dias) },
-      { escolaId: escola.id, utilizadorId: criador.id, entidade: "inscricao", entidadeId: insc.id, acao: "criou", dados: { categoria: categoria.codigo, precoCentavos: categoria.precoCentavos, estadoInatro: insc.estadoInatro }, criadoEm: diasAtras(c.dias) },
+    const historyRows: Array<typeof s.history.$inferInsert> = [
+      { schoolId: school.id, userId: creator.id, entity: "aluno", entityId: student.id, action: "criou", data: { name: c.name }, createdAt: daysAgo(c.days) },
+      { schoolId: school.id, userId: creator.id, entity: "inscricao", entityId: enr.id, action: "criou", data: { category: category.code, priceCents: category.priceCents, inatroStatus: enr.inatroStatus }, createdAt: daysAgo(c.days) },
     ];
 
-    for (const [pct, metodo, dias] of c.pagamentos ?? []) {
-      const valor = Math.round((categoria.precoCentavos * pct) / 100);
+    for (const [pct, method, days] of c.payments ?? []) {
+      const amount = Math.round((category.priceCents * pct) / 100);
       const [p] = await db
-        .insert(s.pagamentos)
-        .values({ escolaId: escola.id, inscricaoId: insc.id, valorCentavos: valor, metodo, pagoEm: diasAtras(dias), registadoPor: atendente.id })
+        .insert(s.payments)
+        .values({ schoolId: school.id, enrollmentId: enr.id, amountCents: amount, method, paidAt: daysAgo(days), recordedBy: atendente.id })
         .returning();
-      hist.push({ escolaId: escola.id, utilizadorId: atendente.id, entidade: "pagamento", entidadeId: p.id, acao: "registou", dados: { inscricaoId: insc.id, valorCentavos: valor, metodo }, criadoEm: diasAtras(dias) });
+      historyRows.push({ schoolId: school.id, userId: atendente.id, entity: "pagamento", entityId: p.id, action: "registou", data: { enrollmentId: enr.id, amountCents: amount, method }, createdAt: daysAgo(days) });
     }
 
-    if (c.anulado) {
-      const [pct, metodo, motivo] = c.anulado;
-      const valor = Math.round((categoria.precoCentavos * pct) / 100);
+    if (c.voided) {
+      const [pct, method, reason] = c.voided;
+      const amount = Math.round((category.priceCents * pct) / 100);
       const [p] = await db
-        .insert(s.pagamentos)
-        .values({ escolaId: escola.id, inscricaoId: insc.id, valorCentavos: valor, metodo, pagoEm: diasAtras(c.dias), registadoPor: atendente.id, anuladoEm: diasAtras(c.dias - 1), anuladoPor: gestor.id, motivoAnulacao: motivo })
+        .insert(s.payments)
+        .values({ schoolId: school.id, enrollmentId: enr.id, amountCents: amount, method, paidAt: daysAgo(c.days), recordedBy: atendente.id, voidedAt: daysAgo(c.days - 1), voidedBy: gestor.id, voidReason: reason })
         .returning();
-      hist.push(
-        { escolaId: escola.id, utilizadorId: atendente.id, entidade: "pagamento", entidadeId: p.id, acao: "registou", dados: { inscricaoId: insc.id, valorCentavos: valor, metodo }, criadoEm: diasAtras(c.dias) },
-        { escolaId: escola.id, utilizadorId: gestor.id, entidade: "pagamento", entidadeId: p.id, acao: "anulou", dados: { inscricaoId: insc.id, motivo }, criadoEm: diasAtras(c.dias - 1) },
+      historyRows.push(
+        { schoolId: school.id, userId: atendente.id, entity: "pagamento", entityId: p.id, action: "registou", data: { enrollmentId: enr.id, amountCents: amount, method }, createdAt: daysAgo(c.days) },
+        { schoolId: school.id, userId: gestor.id, entity: "pagamento", entityId: p.id, action: "anulou", data: { enrollmentId: enr.id, reason }, createdAt: daysAgo(c.days - 1) },
       );
     }
 
-    await db.insert(s.historico).values(hist);
+    await db.insert(s.history).values(historyRows);
   }
 
   console.log(`Seed concluído. Utilizadores (palavra-passe "${PASSWORD}"):`);

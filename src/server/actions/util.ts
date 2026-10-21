@@ -1,24 +1,24 @@
 import "server-only";
-import { ErroNegocio, type EstadoForm } from "@/server/erros";
+import { BusinessError, type FormState } from "@/server/errors";
 
 /** Converte erros em mensagens amigáveis. Nunca expõe detalhes técnicos. */
-export function erroParaEstado(e: unknown): EstadoForm {
-  if (e instanceof ErroNegocio) {
+export function errorToState(e: unknown): FormState {
+  if (e instanceof BusinessError) {
     return {
-      erro: e.message,
-      campos: e.campo ? { [e.campo]: e.message } : undefined,
+      error: e.message,
+      fields: e.field ? { [e.field]: e.message } : undefined,
       link: e.link,
       t: Date.now(),
     };
   }
   console.error("[action]", e instanceof Error ? e.message : e);
-  return { erro: "Ocorreu um erro inesperado. Tente novamente.", t: Date.now() };
+  return { error: "Ocorreu um erro inesperado. Tente novamente.", t: Date.now() };
 }
 
-export function sucesso(mensagem?: string): EstadoForm {
-  return { ok: true, mensagem, t: Date.now() };
+export function success(message?: string): FormState {
+  return { ok: true, message, t: Date.now() };
 }
 
-export function invalido(campos: Record<string, string>): EstadoForm {
-  return { erro: "Verifique os campos assinalados.", campos, t: Date.now() };
+export function invalid(fields: Record<string, string>): FormState {
+  return { error: "Verifique os campos assinalados.", fields, t: Date.now() };
 }

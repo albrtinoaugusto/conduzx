@@ -2,73 +2,73 @@ import "server-only";
 import bcrypt from "bcryptjs";
 import { asc, eq, sql } from "drizzle-orm";
 import { db } from "@/server/db";
-import { escolas, utilizadores } from "@/server/db/schema";
-import { ErroNegocio } from "@/server/erros";
-import type { Ctx } from "@/server/auth/sessao";
+import { schools, users } from "@/server/db/schema";
+import { BusinessError } from "@/server/errors";
+import type { Ctx } from "@/server/auth/session";
 
-export async function resumoGlobal() {
+export async function globalSummary() {
   const result = await db.execute<{
-    empresas: number | string;
+    companies: number | string;
     admins: number | string;
-    inscricoes: number | string;
-    recebimentos_mes: number | string;
+    enrollments: number | string;
+    received_month: number | string;
   }>(sql`
     select
-      (select count(*) from escolas) as empresas,
+      (select count(*) from escolas) as companies,
       (select count(*) from utilizadores where papel = 'admin' and ativo) as admins,
-      (select count(*) from inscricoes where eliminado_em is null) as inscricoes,
+      (select count(*) from inscricoes where eliminado_em is null) as enrollments,
       (select coalesce(sum(valor_centavos), 0) from pagamentos
-        where anulado_em is null and pago_em >= date_trunc('month', now())) as recebimentos_mes
+        where anulado_em is null and pago_em >= date_trunc('month', now())) as received_month
   `);
   const r = result.rows[0];
   return {
-    empresas: Number(r.empresas),
+    companies: Number(r.companies),
     admins: Number(r.admins),
-    inscricoes: Number(r.inscricoes),
-    recebimentosMes: Number(r.recebimentos_mes),
+    enrollments: Number(r.enrollments),
+    receivedThisMonth: Number(r.received_month),
   };
 }
 
-export async function listarEmpresas() {
+export async function listCompanies() {
   return db.execute<{
     id: string;
-    nome: string;
-    telefone: string | null;
-    criado_em: Date;
-    utilizadores: number | string;
-    inscricoes: number | string;
-    recebido: number | string;
+    name: string;
+    phone: string | null;
+    created_at: Date;
+    users: number | string;
+    enrollments: number | string;
+    received: number | string;
   }>(sql`
-    select e.id, e.nome, e.telefone, e.criado_em,
-      (select count(*) from utilizadores u where u.escola_id = e.id and u.ativo) as utilizadores,
-      (select count(*) from inscricoes i where i.escola_id = e.id and i.eliminado_em is null) as inscricoes,
+    select e.id, e.nome as name, e.telefone as phone, e.criado_em as created_at,
+      (select count(*) from utilizadores u where u.escola_id = e.id and u.ativo) as users,
+      (select count(*) from inscricoes i where i.escola_id = e.id and i.eliminado_em is null) as enrollments,
       (select coalesce(sum(p.valor_centavos), 0) from pagamentos p
-        where p.escola_id = e.id and p.anulado_em is null) as recebido
+        where p.escola_id = e.id and p.anulado_em is null) as received
     from escolas e order by e.nome
   `).then((r) => r.rows);
 }
 
-export async function guardarEmpresa(ctx: Ctx, dados: { id?: string; nome: string; telefone: string | null }) {
-  if (dados.id) {
-    const resultado = await db.update(escolas).set({ nome: dados.nome, telefone: dados.telefone }).where(eq(escolas.id, dados.id)).returning({ id: escolas.id });
-    if (!resultado.length) throw new ErroNegocio("Empresa não encontrada.");
-    return resultado[0].id;
+export async function saveCompany(ctx: Ctx, data: { id?: string; name: string; phone: string | null }) {
+  if (data.id) {
+    const updatedRows = await db.update(schools).set({ name: data.name, phone: data.phone }).where(eq(schools.id, data.id)).returning({ id: schools.id });
+    if (!updatedRows.length) throw new BusinessError("Empresa não encontrada.");
+    return updatedRows[0].id;
   }
-  const [nova] = await db.insert(escolas).values({ nome: dados.nome, telefone: dados.telefone }).returning({ id: escolas.id });
-  return nova.id;
+  const [created] = await db.insert(schools).values({ name: data.name, phone: data.phone }).returning({ id: schools.id });
+  return created.id;
 }
 
-export async function listarAdmins() {
-  return db.select({ id: utilizadores.id, nome: utilizadores.nome, email: utilizadores.email, ativo: utilizadores.ativo, criadoEm: utilizadores.criadoEm, escola: escolas.nome })
-    .from(utilizadores).innerJoin(escolas, eq(escolas.id, utilizadores.escolaId))
-    .where(eq(utilizadores.papel, "admin")).orderBy(asc(escolas.nome), asc(utilizadores.nome));
+export async function listAdmins() {
+  return db.select({ id: users.id, name: users.name, email: users.email, active: users.active, createdAt: users.createdAt, school: schools.name })
+    .from(users).innerJoin(schools, eq(schools.id, users.schoolId))
+    .where(eq(users.role, "admin")).orderBy(asc(schools.name), asc(users.name));
 }
 
-export async function criarAdminEmpresa(dados: { nome: string; email: string; password: string; escolaId: string }) {
-  const [escola] = await db.select({ id: escolas.id }).from(escolas).where(eq(escolas.id, dados.escolaId)).limit(1);
-  if (!escola) throw new ErroNegocio("Escolha uma empresa válida.", "escolaId");
-  const [existente] = await db.select({ id: utilizadores.id }).from(utilizadores).where(eq(utilizadores.email, dados.email)).limit(1);
-  if (existente) throw new ErroNegocio("Já existe uma conta com este email.", "email");
-  const passwordHash = await bcrypt.hash(dados.password, 10);
-  await db.insert(utilizadores).values({ escolaId: escola.id, nome: dados.nome, email: dados.email, passwordHash, papel: "admin" });
+export async function createCompanyAdmin(data: { name: string; email: string; password: string; schoolId: string }) {
+  const [school] = await db.select({ id: schools.id }).from(schools).where(eq(schools.id, data.schoolId)).limit(1);
+  if (!school) throw new BusinessError("Escolha uma empresa válida.", "schoolId");
+  const [existing] = await db.select({ id: users.id }).from(users).where(eq(users.email, data.email)).limit(1);
+  if (existing) throw new BusinessError("Já existe uma conta com este email.", "email");
+  const passwordHash = await bcrypt.hash(data.password, 10);
+  await db.insert(users).values({ schoolId: school.id, name: data.name, email: data.email, passwordHash, role: "admin" });
 }

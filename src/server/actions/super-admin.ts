@@ -2,41 +2,41 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { exigirSuperAdmin } from "@/server/auth/sessao";
-import { criarAdminEmpresa, guardarEmpresa } from "@/server/services/super-admin";
-import { formParaObjeto } from "@/server/validation/esquemas";
+import { requireSuperAdmin } from "@/server/auth/session";
+import { createCompanyAdmin, saveCompany } from "@/server/services/super-admin";
+import { formToObject } from "@/server/validation/schemas";
 
-export async function guardarEmpresaAction(fd: FormData) {
-  const ctx = await exigirSuperAdmin();
-  const data = formParaObjeto(fd);
-  const nome = data.nome?.trim();
-  if (!nome || nome.length > 150) redirect("/admin/empresas?erro=nome");
-  const telefone = data.telefone?.trim() || null;
-  if (telefone && telefone.length > 30) redirect("/admin/empresas?erro=telefone");
+export async function saveCompanyAction(fd: FormData) {
+  const ctx = await requireSuperAdmin();
+  const data = formToObject(fd);
+  const name = data.name?.trim();
+  if (!name || name.length > 150) redirect("/admin/empresas?error=name");
+  const phone = data.phone?.trim() || null;
+  if (phone && phone.length > 30) redirect("/admin/empresas?error=phone");
   try {
-    await guardarEmpresa(ctx, { id: data.id || undefined, nome, telefone });
+    await saveCompany(ctx, { id: data.id || undefined, name, phone });
   } catch {
-    redirect("/admin/empresas?erro=guardar");
+    redirect("/admin/empresas?error=save");
   }
   revalidatePath("/admin");
   revalidatePath("/admin/empresas");
-  redirect("/admin/empresas?guardada=1");
+  redirect("/admin/empresas?saved=1");
 }
 
-export async function criarAdminEmpresaAction(fd: FormData) {
-  await exigirSuperAdmin();
-  const data = formParaObjeto(fd);
-  if (!data.nome?.trim() || data.nome.trim().length > 100) redirect("/admin/admins?erro=nome");
+export async function createCompanyAdminAction(fd: FormData) {
+  await requireSuperAdmin();
+  const data = formToObject(fd);
+  if (!data.name?.trim() || data.name.trim().length > 100) redirect("/admin/admins?error=name");
   const email = data.email?.trim().toLowerCase() ?? "";
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) redirect("/admin/admins?erro=email");
-  if (!data.password || data.password.length < 8 || data.password.length > 100) redirect("/admin/admins?erro=password");
-  if (!data.escolaId) redirect("/admin/admins?erro=empresa");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) redirect("/admin/admins?error=email");
+  if (!data.password || data.password.length < 8 || data.password.length > 100) redirect("/admin/admins?error=password");
+  if (!data.schoolId) redirect("/admin/admins?error=company");
   try {
-    await criarAdminEmpresa({ nome: data.nome.trim(), email, password: data.password, escolaId: data.escolaId });
+    await createCompanyAdmin({ name: data.name.trim(), email, password: data.password, schoolId: data.schoolId });
   } catch {
-    redirect("/admin/admins?erro=guardar");
+    redirect("/admin/admins?error=save");
   }
   revalidatePath("/admin/admins");
   revalidatePath("/admin");
-  redirect("/admin/admins?criado=1");
+  redirect("/admin/admins?created=1");
 }

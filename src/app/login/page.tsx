@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { IconSteering } from "@/components/ui/icons";
-import { obterContexto } from "@/server/auth/sessao";
+import { getContext } from "@/server/auth/session";
 import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = { title: "Entrar - ConduzX" };
 export const dynamic = "force-dynamic";
 
 export default async function LoginPage() {
-  if (await obterContexto()) redirect("/");
+  if (await getContext()) redirect("/");
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-night-900 px-4 py-12">

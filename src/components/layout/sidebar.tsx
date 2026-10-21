@@ -4,11 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ComponentType } from "react";
 import { cn } from "@/lib/cn";
-import { iniciais, papelRotulo } from "@/lib/rotulos";
+import { initials, roleLabel } from "@/lib/labels";
 import { IconLogout, IconPalette } from "@/components/ui/icons";
-import { sairAction } from "@/server/actions/auth";
+import { signOutAction } from "@/server/actions/auth";
 import { Logo } from "./logo";
-import { navGestao, navPrincipal, navSuperAdmin, type UtilizadorShell } from "./nav-items";
+import { managementNav, mainNav, superAdminNav, type ShellUser } from "./nav-items";
 
 type NavItem = {
   href: string;
@@ -47,15 +47,15 @@ function NavLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => void 
 }
 
 export function Sidebar({
-  utilizador,
-  pendentes,
+  user,
+  pending,
   onNavigate,
 }: {
-  utilizador: UtilizadorShell;
-  pendentes: number;
+  user: ShellUser;
+  pending: number;
   onNavigate?: () => void;
 }) {
-  const gestao = navGestao(utilizador);
+  const managementItems = managementNav(user);
 
   return (
     <div className="flex h-full flex-col gap-8 px-5 py-7">
@@ -65,30 +65,30 @@ export function Sidebar({
 
       <div className="flex items-center gap-3 rounded-full bg-night-800 p-1.5 pr-4 shadow-raised">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand font-display text-sm font-bold text-brand-ink">
-          {iniciais(utilizador.nome)}
+          {initials(user.name)}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-semibold text-ink">{utilizador.nome}</span>
-          <span className="block truncate text-[11px] text-muted" title={utilizador.escola}>
-            {papelRotulo[utilizador.papel]} · {utilizador.escola}
+          <span className="block truncate text-sm font-semibold text-ink">{user.name}</span>
+          <span className="block truncate text-[11px] text-muted" title={user.school}>
+            {roleLabel[user.role]} · {user.school}
           </span>
         </span>
       </div>
 
       <nav className="flex flex-col gap-1.5" aria-label="Principal">
-        <p className="px-4 pb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-subtle">{utilizador.superAdmin ? "Administração" : "Operação"}</p>
-        {(utilizador.superAdmin ? navSuperAdmin : navPrincipal).map((item) => (
+        <p className="px-4 pb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-subtle">{user.superAdmin ? "Administração" : "Operação"}</p>
+        {(user.superAdmin ? superAdminNav : mainNav).map((item) => (
           <NavLink
             key={item.href}
-            item={item.href === "/pendencias" ? { ...item, badge: pendentes } : item}
+            item={item.href === "/pendencias" ? { ...item, badge: pending } : item}
             onNavigate={onNavigate}
           />
         ))}
 
-        {gestao.length ? (
+        {managementItems.length ? (
           <>
             <p className="mt-5 px-4 pb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-subtle">Gestão</p>
-            {gestao.map((item) => (
+            {managementItems.map((item) => (
               <NavLink key={item.href} item={item} onNavigate={onNavigate} />
             ))}
           </>
@@ -96,10 +96,10 @@ export function Sidebar({
       </nav>
 
       <div className="mt-auto flex flex-col gap-1.5">
-        {utilizador.admin ? (
+        {user.admin ? (
           <NavLink item={{ href: "/design-system", label: "Design System", icon: IconPalette }} onNavigate={onNavigate} />
         ) : null}
-        <form action={sairAction}>
+        <form action={signOutAction}>
           <button
             type="submit"
             className="flex h-10 w-full items-center gap-3 rounded-full bg-night-800 px-4 text-sm font-semibold text-muted shadow-raised transition hover:text-ink"

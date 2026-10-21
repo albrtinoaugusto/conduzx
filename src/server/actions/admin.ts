@@ -1,56 +1,56 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { exigirContexto } from "@/server/auth/sessao";
-import type { EstadoForm } from "@/server/erros";
-import { atualizarCategoria, criarCategoria } from "@/server/services/categorias";
-import { atualizarUtilizador, criarUtilizador } from "@/server/services/utilizadores";
+import { requireContext } from "@/server/auth/session";
+import type { FormState } from "@/server/errors";
+import { updateCategory, createCategory } from "@/server/services/categories";
+import { updateUser, createUser } from "@/server/services/users";
 import {
-  atualizarUtilizadorSchema,
-  categoriaSchema,
-  errosZod,
-  formParaObjeto,
-  utilizadorSchema,
-} from "@/server/validation/esquemas";
-import { erroParaEstado, invalido, sucesso } from "./util";
+  updateUserSchema,
+  categorySchema,
+  zodErrors,
+  formToObject,
+  userSchema,
+} from "@/server/validation/schemas";
+import { errorToState, invalid, success } from "./util";
 
-export async function guardarCategoriaAction(_: EstadoForm, fd: FormData): Promise<EstadoForm> {
-  const ctx = await exigirContexto("gerir_categorias");
-  const id = String(fd.get("categoriaId") ?? "");
-  const r = categoriaSchema.safeParse(formParaObjeto(fd));
-  if (!r.success) return invalido(errosZod(r.error));
+export async function saveCategoryAction(_: FormState, fd: FormData): Promise<FormState> {
+  const ctx = await requireContext("manage_categories");
+  const id = String(fd.get("categoryId") ?? "");
+  const r = categorySchema.safeParse(formToObject(fd));
+  if (!r.success) return invalid(zodErrors(r.error));
   try {
-    if (id) await atualizarCategoria(ctx, id, r.data);
-    else await criarCategoria(ctx, r.data);
+    if (id) await updateCategory(ctx, id, r.data);
+    else await createCategory(ctx, r.data);
   } catch (e) {
-    return erroParaEstado(e);
+    return errorToState(e);
   }
   revalidatePath("/categorias");
-  return sucesso(id ? "Categoria atualizada." : "Categoria criada.");
+  return success(id ? "Categoria atualizada." : "Categoria criada.");
 }
 
-export async function criarUtilizadorAction(_: EstadoForm, fd: FormData): Promise<EstadoForm> {
-  const ctx = await exigirContexto("gerir_utilizadores");
-  const r = utilizadorSchema.safeParse(formParaObjeto(fd));
-  if (!r.success) return invalido(errosZod(r.error));
+export async function createUserAction(_: FormState, fd: FormData): Promise<FormState> {
+  const ctx = await requireContext("manage_users");
+  const r = userSchema.safeParse(formToObject(fd));
+  if (!r.success) return invalid(zodErrors(r.error));
   try {
-    await criarUtilizador(ctx, r.data);
+    await createUser(ctx, r.data);
   } catch (e) {
-    return erroParaEstado(e);
+    return errorToState(e);
   }
   revalidatePath("/utilizadores");
-  return sucesso("Utilizador criado.");
+  return success("Utilizador criado.");
 }
 
-export async function atualizarUtilizadorAction(_: EstadoForm, fd: FormData): Promise<EstadoForm> {
-  const ctx = await exigirContexto("gerir_utilizadores");
-  const r = atualizarUtilizadorSchema.safeParse(formParaObjeto(fd));
-  if (!r.success) return invalido(errosZod(r.error));
+export async function updateUserAction(_: FormState, fd: FormData): Promise<FormState> {
+  const ctx = await requireContext("manage_users");
+  const r = updateUserSchema.safeParse(formToObject(fd));
+  if (!r.success) return invalid(zodErrors(r.error));
   try {
-    await atualizarUtilizador(ctx, r.data);
+    await updateUser(ctx, r.data);
   } catch (e) {
-    return erroParaEstado(e);
+    return errorToState(e);
   }
   revalidatePath("/utilizadores");
-  return sucesso("Utilizador atualizado.");
+  return success("Utilizador atualizado.");
 }

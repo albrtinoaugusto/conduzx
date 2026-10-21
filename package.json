@@ -12,9 +12,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx --env-file=.env scripts/migrar.ts",
+    "db:migrate": "tsx --env-file=.env scripts/migrate.ts",
     "db:seed": "tsx --env-file=.env scripts/seed.ts",
-    "db:super-admin": "tsx --env-file=.env scripts/configurar-super-admin.ts",
+    "db:super-admin": "tsx --env-file=.env scripts/setup-super-admin.ts",
     "db:setup": "npm run db:migrate && npm run db:seed"
   },
   "dependencies": {

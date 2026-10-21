@@ -14,12 +14,12 @@ import { Button, type ButtonVariant } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/input";
 import { IconAlert, IconCheck } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
-import type { EstadoForm } from "@/server/erros";
+import type { FormState } from "@/server/errors";
 
-export type AcaoForm = (anterior: EstadoForm, dados: FormData) => Promise<EstadoForm>;
+export type FormAction = (previous: FormState, data: FormData) => Promise<FormState>;
 
-const Ctx = createContext<EstadoForm>({});
-export const useEstadoForm = () => useContext(Ctx);
+const Ctx = createContext<FormState>({});
+export const useFormFeedback = () => useContext(Ctx);
 
 /**
  * Formulário ligado a uma server action. Mostra erros por campo e mensagens gerais.
@@ -29,32 +29,32 @@ export function ActionForm({
   action,
   children,
   className,
-  onSucesso,
-  limparAoSucesso = false,
+  onSuccess,
+  resetOnSuccess = false,
 }: {
-  action: AcaoForm;
+  action: FormAction;
   children: ReactNode;
   className?: string;
-  onSucesso?: () => void;
-  limparAoSucesso?: boolean;
+  onSuccess?: () => void;
+  resetOnSuccess?: boolean;
 }) {
-  const [estado, formAction] = useFormState(action, {});
+  const [status, formAction] = useFormState(action, {});
   const ref = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
-    if (estado.ok && estado.t) {
-      if (limparAoSucesso) ref.current?.reset();
-      onSucesso?.();
-    } else if (estado.erro && estado.t) {
+    if (status.ok && status.t) {
+      if (resetOnSuccess) ref.current?.reset();
+      onSuccess?.();
+    } else if (status.error && status.t) {
       // Leva o utilizador ao primeiro erro (útil em formulários longos)
-      const alvo = ref.current?.querySelector<HTMLElement>("[aria-invalid=true], [role=alert]");
-      alvo?.scrollIntoView({ behavior: "smooth", block: "center" });
+      const target = ref.current?.querySelector<HTMLElement>("[aria-invalid=true], [role=alert]");
+      target?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [estado.t]);
+  }, [status.t]);
 
   return (
-    <Ctx.Provider value={estado}>
+    <Ctx.Provider value={status}>
       <form ref={ref} action={formAction} className={className} noValidate>
         {children}
       </form>
@@ -64,24 +64,24 @@ export function ActionForm({
 
 /** Mensagem geral (erro ou sucesso) do último envio. */
 export function FormAlert({ className }: { className?: string }) {
-  const e = useEstadoForm();
-  if (!e.erro && !(e.ok && e.mensagem)) return null;
-  const erro = Boolean(e.erro);
+  const e = useFormFeedback();
+  if (!e.error && !(e.ok && e.message)) return null;
+  const error = Boolean(e.error);
   return (
     <div
-      role={erro ? "alert" : "status"}
+      role={error ? "alert" : "status"}
       className={cn(
         "flex items-start gap-3 rounded-xl px-4 py-3 text-sm ring-1 ring-inset",
-        erro ? "bg-danger/10 text-danger ring-danger/30" : "bg-success/10 text-success ring-success/30",
+        error ? "bg-danger/10 text-danger ring-danger/30" : "bg-success/10 text-success ring-success/30",
         className,
       )}
     >
-      {erro ? <IconAlert size={18} className="mt-0.5 shrink-0" /> : <IconCheck size={18} className="mt-0.5 shrink-0" />}
+      {error ? <IconAlert size={18} className="mt-0.5 shrink-0" /> : <IconCheck size={18} className="mt-0.5 shrink-0" />}
       <div>
-        <p className="font-semibold">{e.erro ?? e.mensagem}</p>
+        <p className="font-semibold">{e.error ?? e.message}</p>
         {e.link ? (
           <Link href={e.link.href} className="mt-1 inline-block text-xs font-bold underline">
-            {e.link.texto}
+            {e.link.text}
           </Link>
         ) : null}
       </div>
@@ -90,13 +90,13 @@ export function FormAlert({ className }: { className?: string }) {
 }
 
 export function FormInput(props: ComponentProps<typeof Input> & { name: string }) {
-  const e = useEstadoForm();
-  return <Input {...props} error={props.error ?? e.campos?.[props.name]} />;
+  const e = useFormFeedback();
+  return <Input {...props} error={props.error ?? e.fields?.[props.name]} />;
 }
 
 export function FormSelect(props: ComponentProps<typeof Select> & { name: string }) {
-  const e = useEstadoForm();
-  return <Select {...props} error={props.error ?? e.campos?.[props.name]} />;
+  const e = useFormFeedback();
+  return <Select {...props} error={props.error ?? e.fields?.[props.name]} />;
 }
 
 export function FormTextarea({
@@ -106,24 +106,24 @@ export function FormTextarea({
   className,
   ...props
 }: ComponentProps<"textarea"> & { label?: string; name: string; hint?: string }) {
-  const e = useEstadoForm();
-  const erro = e.campos?.[name];
+  const e = useFormFeedback();
+  const error = e.fields?.[name];
   return (
     <label className="block">
       {label ? <span className="mb-1.5 block text-xs font-semibold text-muted">{label}</span> : null}
       <textarea
         name={name}
         rows={3}
-        aria-invalid={erro ? true : undefined}
+        aria-invalid={error ? true : undefined}
         className={cn(
           "w-full rounded-xl border border-transparent bg-night-700 px-4 py-3 text-sm text-ink shadow-pressed placeholder:text-subtle transition focus:border-brand/70 focus:outline-none focus:ring-2 focus:ring-brand/25",
-          erro && "border-danger/70",
+          error && "border-danger/70",
           className,
         )}
         {...props}
       />
-      {erro ? (
-        <span className="mt-1.5 block text-xs font-medium text-danger">{erro}</span>
+      {error ? (
+        <span className="mt-1.5 block text-xs font-medium text-danger">{error}</span>
       ) : hint ? (
         <span className="mt-1.5 block text-xs text-subtle">{hint}</span>
       ) : null}
@@ -137,14 +137,14 @@ export function SubmitButton({
   size = "md",
   className,
   icon,
-  pendente = "A guardar…",
+  pendingLabel = "A guardar…",
 }: {
   children: ReactNode;
   variant?: ButtonVariant;
   size?: "sm" | "md" | "lg";
   className?: string;
   icon?: ReactNode;
-  pendente?: string;
+  pendingLabel?: string;
 }) {
   const { pending } = useFormStatus();
   return (
@@ -152,7 +152,7 @@ export function SubmitButton({
       {pending ? (
         <>
           <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent" />
-          {pendente}
+          {pendingLabel}
         </>
       ) : (
         children

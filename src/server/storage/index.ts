@@ -7,36 +7,36 @@ import path from "node:path";
  * Armazenamento de ficheiros. Hoje é local (STORAGE_DIR, fora de public/);
  * para passar a S3-compatível basta outra implementação desta interface.
  */
-export interface Armazenamento {
-  guardar(chave: string, conteudo: Uint8Array): Promise<void>;
-  ler(chave: string): Promise<Uint8Array<ArrayBuffer> | null>;
+export interface FileStorage {
+  save(key: string, content: Uint8Array): Promise<void>;
+  read(key: string): Promise<Uint8Array<ArrayBuffer> | null>;
 }
 
-const CHAVE_VALIDA = /^[0-9a-f-]{36}\/[0-9a-f]{32}$/;
+const VALID_KEY = /^[0-9a-f-]{36}\/[0-9a-f]{32}$/;
 
 /** Chave aleatória, agrupada por escola. Nunca deriva do nome do ficheiro. */
-export function novaChave(escolaId: string) {
-  return `${escolaId}/${randomBytes(16).toString("hex")}`;
+export function newStorageKey(schoolId: string) {
+  return `${schoolId}/${randomBytes(16).toString("hex")}`;
 }
 
-class ArmazenamentoLocal implements Armazenamento {
-  constructor(private raiz: string) {}
+class LocalFileStorage implements FileStorage {
+  constructor(private root: string) {}
 
-  private caminho(chave: string) {
-    if (!CHAVE_VALIDA.test(chave)) throw new Error("Chave de armazenamento inválida.");
-    return path.join(this.raiz, ...chave.split("/"));
+  private resolvePath(key: string) {
+    if (!VALID_KEY.test(key)) throw new Error("Chave de armazenamento inválida.");
+    return path.join(this.root, ...key.split("/"));
   }
 
-  async guardar(chave: string, conteudo: Uint8Array) {
-    const destino = this.caminho(chave);
-    await mkdir(path.dirname(destino), { recursive: true });
+  async save(key: string, content: Uint8Array) {
+    const dest = this.resolvePath(key);
+    await mkdir(path.dirname(dest), { recursive: true });
     // "wx": nunca sobrescreve um ficheiro existente
-    await writeFile(destino, conteudo, { flag: "wx" });
+    await writeFile(dest, content, { flag: "wx" });
   }
 
-  async ler(chave: string) {
+  async read(key: string) {
     try {
-      return new Uint8Array(await readFile(this.caminho(chave)));
+      return new Uint8Array(await readFile(this.resolvePath(key)));
     } catch (e) {
       if ((e as NodeJS.ErrnoException).code === "ENOENT") return null;
       throw e;
@@ -44,6 +44,6 @@ class ArmazenamentoLocal implements Armazenamento {
   }
 }
 
-export const armazenamento: Armazenamento = new ArmazenamentoLocal(
+export const storage: FileStorage = new LocalFileStorage(
   path.resolve(process.env.STORAGE_DIR || "./storage"),
 );
