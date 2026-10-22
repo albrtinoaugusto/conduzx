@@ -6,7 +6,7 @@ import type { Ctx } from "@/server/auth/session";
 type Num = number | string | null;
 const n = (v: Num) => Number(v ?? 0);
 
-/** Indicadores do painel — uma ida à base de dados por bloco, sempre por escola. */
+/** Indicadores do painel - uma ida à base de dados por bloco, sempre por escola. */
 export async function getDashboard(ctx: Ctx) {
   const e = ctx.schoolId;
 

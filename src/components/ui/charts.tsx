@@ -1,6 +1,6 @@
 import { cn } from "@/lib/cn";
 
-/* Gráficos leves em SVG/CSS — sem dependências externas. */
+/* Gráficos leves em SVG/CSS - sem dependências externas. */
 
 export type DonutSlice = { label: string; value: number; color: string };
 

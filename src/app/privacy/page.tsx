@@ -3,7 +3,7 @@ import { CONTACT } from "@/components/site/contact";
 import { LegalPage, LegalSection } from "@/components/site/legal-page";
 
 export const metadata: Metadata = {
-  title: "Política de Privacidade — ConduzX",
+  title: "Política de Privacidade - ConduzX",
   description: "Como o ConduzX recolhe, utiliza e protege os dados pessoais das escolas de condução e dos seus alunos.",
 };
 
@@ -11,7 +11,7 @@ export default function PrivacyPage() {
   return (
     <LegalPage
       title="Política de Privacidade"
-      intro="A confiança das escolas que utilizam o ConduzX — e dos alunos que elas servem — é a base do nosso trabalho. Esta política explica, de forma clara, que dados tratamos, porquê e como os protegemos."
+      intro="A confiança das escolas que utilizam o ConduzX - e dos alunos que elas servem - é a base do nosso trabalho. Esta política explica, de forma clara, que dados tratamos, porquê e como os protegemos."
       updatedAt="21 de outubro de 2026"
     >
       <LegalSection n={1} title="Quem somos">

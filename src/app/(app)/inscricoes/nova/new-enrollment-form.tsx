@@ -161,7 +161,7 @@ export function NewEnrollmentForm({ categories, initialStudent }: { categories: 
           <FormSelect name="categoryId" label="Categoria *" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
-                {c.name} — {formatMoneyMzn(c.priceCents)}
+                {c.name} - {formatMoneyMzn(c.priceCents)}
               </option>
             ))}
           </FormSelect>

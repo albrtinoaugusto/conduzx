@@ -197,7 +197,7 @@ export const IconPalette = (p: IconProps) => (
   </Svg>
 );
 
-/** Volante — marca ConduzX */
+/** Volante - marca ConduzX */
 export const IconSteering = (p: IconProps) => (
   <Svg {...p}>
     <circle cx="12" cy="12" r="9" />

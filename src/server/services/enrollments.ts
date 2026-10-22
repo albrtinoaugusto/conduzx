@@ -140,7 +140,7 @@ export type NewEnrollmentInput = {
   firstPayment: { amountCents: number; method: PaymentMethod; reference: string | null } | null;
 };
 
-/** Nova inscrição — UMA transação: aluno + inscrição + pagamento opcional + histórico. */
+/** Nova inscrição - UMA transação: aluno + inscrição + pagamento opcional + histórico. */
 export async function createEnrollment(ctx: Ctx, input: NewEnrollmentInput) {
   const inatroError = validateInatroStatus(input.inatroStatus, input.inatroProcessNumber);
   if (inatroError) throw new BusinessError(inatroError, "inatroProcessNumber");

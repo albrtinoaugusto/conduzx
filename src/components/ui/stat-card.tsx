@@ -11,7 +11,7 @@ type StatCardProps = {
   className?: string;
 };
 
-/** Cartão de indicador — inspirado nos KPIs do painel de referência. */
+/** Cartão de indicador - inspirado nos KPIs do painel de referência. */
 export function StatCard({
   label,
   value,

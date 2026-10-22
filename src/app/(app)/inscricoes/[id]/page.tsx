@@ -89,7 +89,7 @@ export default async function EnrollmentPage({
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <div className="flex flex-col gap-5">
           <Card>
-            <CardHeader title="Pagamentos" description="Registos imutáveis — erros corrigem-se com anulação" />
+            <CardHeader title="Pagamentos" description="Registos imutáveis - erros corrigem-se com anulação" />
             {i.payments.length === 0 ? (
               <p className="rounded-xl bg-night-700/50 p-4 text-sm text-muted">Ainda não há pagamentos.</p>
             ) : (
@@ -156,7 +156,7 @@ export default async function EnrollmentPage({
           <Card>
             <CardHeader
               title="INATRO"
-              description={i.inatroLastAttempt ? `Última tentativa: ${formatDateTime(i.inatroLastAttempt)}` : "Estado manual — não há integração"}
+              description={i.inatroLastAttempt ? `Última tentativa: ${formatDateTime(i.inatroLastAttempt)}` : "Estado manual - não há integração"}
             />
             <InatroStatusForm enrollmentId={i.id} status={i.inatroStatus} processNumber={i.inatroProcessNumber} note={i.inatroNote} />
           </Card>

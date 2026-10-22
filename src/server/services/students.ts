@@ -175,7 +175,7 @@ export async function updateStudent(ctx: Ctx, id: string, data: StudentInput) {
       .update(students)
       .set({ ...data, updatedAt: new Date() })
       .where(and(eq(students.id, id), eq(students.schoolId, ctx.schoolId)));
-    // Só os nomes dos campos — sem valores pessoais no histórico
+    // Só os nomes dos campos - sem valores pessoais no histórico
     await logHistory(tx, ctx, "aluno", id, "atualizou", { fields: changedFields });
   });
 }

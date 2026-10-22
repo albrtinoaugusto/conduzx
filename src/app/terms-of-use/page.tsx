@@ -3,7 +3,7 @@ import { CONTACT } from "@/components/site/contact";
 import { LegalPage, LegalSection } from "@/components/site/legal-page";
 
 export const metadata: Metadata = {
-  title: "Termos de Uso — ConduzX",
+  title: "Termos de Uso - ConduzX",
   description: "Condições de utilização da plataforma ConduzX para escolas de condução.",
 };
 
@@ -11,7 +11,7 @@ export default function TermsOfUsePage() {
   return (
     <LegalPage
       title="Termos de Uso"
-      intro="Estes termos definem as regras de utilização do ConduzX. Ao aceder à plataforma, a escola e os seus utilizadores aceitam as condições abaixo. Escrevemo-los a pensar na operação da sua escola — se algo não estiver claro, fale connosco."
+      intro="Estes termos definem as regras de utilização do ConduzX. Ao aceder à plataforma, a escola e os seus utilizadores aceitam as condições abaixo. Escrevemo-los a pensar na operação da sua escola - se algo não estiver claro, fale connosco."
       updatedAt="21 de outubro de 2026"
     >
       <LegalSection n={1} title="O serviço">

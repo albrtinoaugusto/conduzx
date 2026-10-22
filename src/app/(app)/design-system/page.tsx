@@ -80,12 +80,12 @@ export default function DesignSystemPage() {
           <p className="font-display text-5xl font-black uppercase leading-none text-brand">
             Display 900
           </p>
-          <p className="font-display text-3xl font-bold text-ink">Título de página — Poppins 700</p>
-          <p className="font-display text-base font-bold text-ink">Título de cartão — Poppins 700</p>
-          <p className="text-sm text-ink">Texto corrente — Inter 400, 14px</p>
-          <p className="text-xs text-muted">Texto secundário — muted, 12px</p>
+          <p className="font-display text-3xl font-bold text-ink">Título de página - Poppins 700</p>
+          <p className="font-display text-base font-bold text-ink">Título de cartão - Poppins 700</p>
+          <p className="text-sm text-ink">Texto corrente - Inter 400, 14px</p>
+          <p className="text-xs text-muted">Texto secundário - muted, 12px</p>
           <p className="text-[11px] font-semibold uppercase tracking-wider text-subtle">
-            Rótulo de tabela — 11px uppercase
+            Rótulo de tabela - 11px uppercase
           </p>
         </div>
       </Section>
@@ -132,9 +132,9 @@ export default function DesignSystemPage() {
             <Input label="Nome completo" placeholder="Ex.: Ana Maria Cossa" />
             <Input label="Telefone" placeholder="84 000 0000" hint="Formato moçambicano" />
             <Select label="Categoria" defaultValue="B">
-              <option value="A">A — Motociclos</option>
-              <option value="B">B — Ligeiros</option>
-              <option value="C">C — Pesados</option>
+              <option value="A">A - Motociclos</option>
+              <option value="B">B - Ligeiros</option>
+              <option value="C">C - Pesados</option>
             </Select>
             <Input label="Valor (MT)" defaultValue="0,00" error="Indique um valor maior que zero." />
             <SearchInput placeholder="Pesquisa" className="sm:col-span-2" />
@@ -171,13 +171,13 @@ export default function DesignSystemPage() {
           <TBody>
             <Tr>
               <Td className="font-semibold">Ana Maria Cossa</Td>
-              <Td className="text-muted">B — Ligeiros</Td>
+              <Td className="text-muted">B - Ligeiros</Td>
               <Td><PaymentBadge status="pago" /></Td>
               <Td align="right">{formatMoneyMzn(0)}</Td>
             </Tr>
             <Tr>
               <Td className="font-semibold">Carlos Mondlane</Td>
-              <Td className="text-muted">A — Motociclos</Td>
+              <Td className="text-muted">A - Motociclos</Td>
               <Td><PaymentBadge status="parcial" /></Td>
               <Td align="right">{formatMoneyMzn(550_000)}</Td>
             </Tr>

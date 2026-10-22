@@ -1,5 +1,5 @@
 /**
- * Schema Drizzle — tradução fiel de schema.sql (fonte de verdade).
+ * Schema Drizzle - tradução fiel de schema.sql (fonte de verdade).
  * Não renomear tabelas/colunas nem remover restrições sem aprovação.
  */
 import { sql } from "drizzle-orm";

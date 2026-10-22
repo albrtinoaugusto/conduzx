@@ -119,7 +119,7 @@ export function UploadDocument({ studentId, enrollments }: { studentId: string; 
         ))}
       </FormSelect>
       {enrollments.length ? (
-        <FormSelect name="enrollmentId" label="Inscrição" defaultValue="" hint="Opcional — ex.: comprovativo de uma inscrição">
+        <FormSelect name="enrollmentId" label="Inscrição" defaultValue="" hint="Opcional - ex.: comprovativo de uma inscrição">
           <option value="">Nenhuma (documento do aluno)</option>
           {enrollments.map((i) => (
             <option key={i.id} value={i.id}>

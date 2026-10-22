@@ -13,7 +13,7 @@ export default async function CategoriesPage() {
     <>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <p className="max-w-xl text-sm text-muted">
-          Mudar um preço só afeta inscrições novas — as antigas mantêm o preço do dia em que foram criadas.
+          Mudar um preço só afeta inscrições novas - as antigas mantêm o preço do dia em que foram criadas.
         </p>
         <CategoryModal />
       </div>

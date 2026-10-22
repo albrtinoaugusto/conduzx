@@ -1,4 +1,4 @@
-/** Contactos públicos do ConduzX — fonte única para a landing e páginas legais. */
+/** Contactos públicos do ConduzX - fonte única para a landing e páginas legais. */
 export const CONTACT = {
   email: "contacto@conduzx.app",
   phone: "84 813 1298",

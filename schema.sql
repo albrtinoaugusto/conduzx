@@ -1,4 +1,4 @@
--- Sistema de gestão para escolas de condução — modelo de dados do MVP (PostgreSQL)
+-- Sistema de gestão para escolas de condução - modelo de dados do MVP (PostgreSQL)
 -- Princípios: multi-escola (escola_id em tudo), nada é apagado de verdade,
 -- dinheiro em inteiros (centavos), tres estados independentes por inscricao.
 

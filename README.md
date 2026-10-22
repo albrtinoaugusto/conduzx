@@ -53,10 +53,10 @@ A aplicação fica em `http://localhost:3000` (a landing pública em `/landing`)
 
 Palavra-passe de todas: `conduzx123`
 
-- `admin@conduzx.test` — administrador (categorias, utilizadores, tudo)
-- `gestor@conduzx.test` — gestor (pode anular pagamentos e ver histórico)
-- `atendente@conduzx.test` — atendente (alunos, inscrições, pagamentos)
-- `outra@conduzx.test` — admin de outra escola (para confirmar o isolamento de dados)
+- `admin@conduzx.test` - administrador (categorias, utilizadores, tudo)
+- `gestor@conduzx.test` - gestor (pode anular pagamentos e ver histórico)
+- `atendente@conduzx.test` - atendente (alunos, inscrições, pagamentos)
+- `outra@conduzx.test` - admin de outra escola (para confirmar o isolamento de dados)
 
 ## Scripts
 

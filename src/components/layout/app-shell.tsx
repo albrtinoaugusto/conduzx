@@ -35,14 +35,14 @@ export function AppShell({
   return (
     <div className="min-h-screen p-0 lg:p-5">
       <div className="mx-auto flex min-h-screen max-w-[1500px] overflow-clip bg-night-900 lg:min-h-[calc(100vh-2.5rem)] lg:rounded-4xl lg:border lg:border-white/[0.05] lg:shadow-shell">
-        {/* Barra lateral — desktop */}
+        {/* Barra lateral - desktop */}
         <aside className="hidden w-64 shrink-0 lg:block">
           <div className="sticky top-5 h-[calc(100vh-2.5rem)] overflow-y-auto">
             <Sidebar user={user} pending={pending} />
           </div>
         </aside>
 
-        {/* Barra lateral — mobile (gaveta) */}
+        {/* Barra lateral - mobile (gaveta) */}
         <div
           className={cn(
             "fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity lg:hidden",

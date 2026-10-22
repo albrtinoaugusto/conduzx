@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* ==========================================================================
-   ConduzX Design System — tokens
+   ConduzX Design System - tokens
    Valores em canais RGB para permitir opacidade no Tailwind (bg-brand/20).
    ========================================================================== */
 :root {

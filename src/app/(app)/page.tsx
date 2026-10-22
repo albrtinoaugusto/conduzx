@@ -147,7 +147,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
         <Card>
           <CardHeader
             title="Últimos pagamentos"
-            description="Registos imutáveis — anulações ficam visíveis"
+            description="Registos imutáveis - anulações ficam visíveis"
             action={
               <Link href="/pagamentos?period=todos" className="inline-flex items-center gap-1 text-xs font-semibold text-brand hover:underline">
                 Ver todos <IconArrowRight size={14} />

@@ -1,4 +1,4 @@
-/** Regras financeiras puras — sem acesso à base de dados. */
+/** Regras financeiras puras - sem acesso à base de dados. */
 
 export type PaymentStatus = "sem_pagamento" | "parcial" | "pago";
 

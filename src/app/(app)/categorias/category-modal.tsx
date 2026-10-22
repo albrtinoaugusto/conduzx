@@ -23,7 +23,7 @@ export function CategoryModal({ category }: { category?: Category }) {
       <div className="grid grid-cols-3 gap-3">
         <FormInput name="code" label="Código *" defaultValue={category?.code} placeholder="B" />
         <div className="col-span-2">
-          <FormInput name="name" label="Nome *" defaultValue={category?.name} placeholder="B — Ligeiros" />
+          <FormInput name="name" label="Nome *" defaultValue={category?.name} placeholder="B - Ligeiros" />
         </div>
       </div>
       <FormInput name="price" label="Preço (MT) *" inputMode="decimal" defaultValue={category?.price} placeholder="18.500" />

@@ -21,7 +21,7 @@ import { SiteFooter } from "@/components/site/site-footer";
 export const metadata: Metadata = {
   title: "ConduzX - Gestão inteligente para escolas de condução",
   description:
-    "Alunos, inscrições, pagamentos e pendências do INATRO sob controlo, num único sistema. A secretaria da sua escola de condução continua a trabalhar — mesmo quando o INATRO não responde.",
+    "Alunos, inscrições, pagamentos e pendências do INATRO sob controlo, num único sistema. A secretaria da sua escola de condução continua a trabalhar - mesmo quando o INATRO não responde.",
 };
 
 const nav = [
@@ -56,7 +56,7 @@ const features = [
   {
     icon: IconHistory,
     title: "Histórico para auditoria",
-    text: "Quem criou, alterou ou anulou — e quando. Cada ação relevante fica registada, para que nada dependa da memória de ninguém.",
+    text: "Quem criou, alterou ou anulou - e quando. Cada ação relevante fica registada, para que nada dependa da memória de ninguém.",
   },
   {
     icon: IconShield,
@@ -67,7 +67,7 @@ const features = [
 
 const steps = [
   { n: "01", title: "Registar o aluno", text: "Nome, BI e contacto. Em segundos, sem duplicados." },
-  { n: "02", title: "Criar a inscrição", text: "Escolha a categoria de carta — o preço fica fixado." },
+  { n: "02", title: "Criar a inscrição", text: "Escolha a categoria de carta - o preço fica fixado." },
   { n: "03", title: "Receber o pagamento", text: "Total ou parcial, em numerário, M-Pesa, e-Mola ou transferência." },
   { n: "04", title: "Acompanhar o INATRO", text: "Marque como pendente ou registado, com número de processo." },
 ];
@@ -112,7 +112,7 @@ function HeroPreview() {
             </span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-bold text-ink">Ana Maria Cossa</p>
-              <p className="text-[11px] text-subtle">Categoria B — Ligeiros</p>
+              <p className="text-[11px] text-subtle">Categoria B - Ligeiros</p>
             </div>
             <InatroBadge status="pendente" />
           </div>
@@ -155,7 +155,7 @@ function HeroPreview() {
           </span>
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs font-bold text-ink">Carlos Mondlane</p>
-            <p className="text-[10px] text-subtle">A — Motociclos</p>
+            <p className="text-[10px] text-subtle">A - Motociclos</p>
           </div>
           <PaymentBadge status="parcial" />
         </div>
@@ -263,7 +263,7 @@ export default function LandingPage() {
 
           <div className="relative h-[460px] sm:h-[520px] lg:-mr-8 lg:h-[600px] xl:-mr-[calc((100vw-80rem)/2+2rem)]">
             <HeroPreview />
-            {/* Selo circular — equivalente ao "DISC 10%" */}
+            {/* Selo circular - equivalente ao "DISC 10%" */}
             <div className="absolute -top-12 right-2 flex h-28 w-28 flex-col sm:-left-10 sm:bottom-10 sm:right-auto sm:top-auto items-center justify-center rounded-full bg-brand text-center text-brand-ink shadow-glow ring-[6px] ring-night-900 sm:h-36 sm:w-36">
               <span className="font-display text-3xl font-black leading-none sm:text-4xl">0</span>
               <span className="font-display text-sm font-extrabold uppercase leading-tight">Papel</span>
@@ -352,7 +352,7 @@ export default function LandingPage() {
               O ConduzX não substitui o INATRO nem se liga a ele: é o registo
               interno da sua escola. Continue a inscrever e a receber, e marque
               a inscrição como pendente. Quando o sistema oficial voltar, a
-              lista de pendências mostra exatamente o que falta concluir — sem
+              lista de pendências mostra exatamente o que falta concluir - sem
               perder um único aluno.
             </p>
           </div>

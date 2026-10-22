@@ -11,7 +11,7 @@ export type StudentValues = {
   address?: string | null;
 };
 
-/** Campos do aluno — reutilizados em "Novo aluno", "Editar" e "Nova inscrição". */
+/** Campos do aluno - reutilizados em "Novo aluno", "Editar" e "Nova inscrição". */
 export function StudentFields({ v = {} }: { v?: StudentValues }) {
   const today = new Date().toISOString().slice(0, 10);
   return (

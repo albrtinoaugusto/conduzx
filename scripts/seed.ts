@@ -36,7 +36,7 @@ async function main() {
     ])
     .returning();
 
-  // Segunda escola — serve para confirmar que os dados não se misturam.
+  // Segunda escola - serve para confirmar que os dados não se misturam.
   const [otherSchool] = await db.insert(s.schools).values({ name: "Escola Rival (teste)" }).returning();
   await db.insert(s.users).values({
     schoolId: otherSchool.id,
@@ -49,11 +49,11 @@ async function main() {
   const cats = await db
     .insert(s.categories)
     .values([
-      { schoolId: school.id, code: "A", name: "A — Motociclos", priceCents: 950_000 },
-      { schoolId: school.id, code: "A1", name: "A1 — Motociclos leves", priceCents: 750_000 },
-      { schoolId: school.id, code: "B", name: "B — Ligeiros", priceCents: 1_850_000 },
-      { schoolId: school.id, code: "C", name: "C — Pesados", priceCents: 3_200_000 },
-      { schoolId: school.id, code: "D", name: "D — Passageiros", priceCents: 3_800_000 },
+      { schoolId: school.id, code: "A", name: "A - Motociclos", priceCents: 950_000 },
+      { schoolId: school.id, code: "A1", name: "A1 - Motociclos leves", priceCents: 750_000 },
+      { schoolId: school.id, code: "B", name: "B - Ligeiros", priceCents: 1_850_000 },
+      { schoolId: school.id, code: "C", name: "C - Pesados", priceCents: 3_200_000 },
+      { schoolId: school.id, code: "D", name: "D - Passageiros", priceCents: 3_800_000 },
     ])
     .returning();
   const cat = Object.fromEntries(cats.map((c) => [c.code, c]));
