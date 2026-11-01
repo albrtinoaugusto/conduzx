@@ -4,6 +4,7 @@ import { requireContext } from "@/server/auth/session";
 import { db } from "@/server/db";
 import { enrollments } from "@/server/db/schema";
 import { can } from "@/server/domain/permissions";
+import { getExamNotice } from "@/server/services/theory-exam";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,7 @@ export default async function AppLayout({
         ne(enrollments.studentStatus, "desistiu"),
       ),
     ) : [{ pending: 0 }];
+  const examNotice = ctx.schoolId ? await getExamNotice(ctx) : { total: 0, rows: [] };
 
   return (
     <AppShell
@@ -34,6 +36,7 @@ export default async function AppLayout({
         superAdmin: ctx.role === "super_admin",
       }}
       pending={pending}
+      examNotice={examNotice}
     >
       {children}
     </AppShell>

@@ -49,10 +49,12 @@ function NavLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => void 
 export function Sidebar({
   user,
   pending,
+  examReady = 0,
   onNavigate,
 }: {
   user: ShellUser;
   pending: number;
+  examReady?: number;
   onNavigate?: () => void;
 }) {
   const managementItems = managementNav(user);
@@ -80,7 +82,7 @@ export function Sidebar({
         {(user.superAdmin ? superAdminNav : mainNav).map((item) => (
           <NavLink
             key={item.href}
-            item={item.href === "/pendencias" ? { ...item, badge: pending } : item}
+            item={item.href === "/pendencias" ? { ...item, badge: pending } : item.href === "/exames" ? { ...item, badge: examReady } : item}
             onNavigate={onNavigate}
           />
         ))}

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { IconBell, IconMenu, IconSearch } from "@/components/ui/icons";
+import { ExamReadyPopup, type ExamNotice } from "./exam-ready-popup";
 import { Logo } from "./logo";
 import { pageTitles, type ShellUser } from "./nav-items";
 import { Sidebar } from "./sidebar";
@@ -22,10 +23,12 @@ export function AppShell({
   children,
   user,
   pending,
+  examNotice,
 }: {
   children: ReactNode;
   user: ShellUser;
   pending: number;
+  examNotice: ExamNotice;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -38,7 +41,7 @@ export function AppShell({
         {/* Barra lateral - desktop */}
         <aside className="hidden w-64 shrink-0 lg:block">
           <div className="sticky top-5 h-[calc(100vh-2.5rem)] overflow-y-auto">
-            <Sidebar user={user} pending={pending} />
+            <Sidebar user={user} pending={pending} examReady={examNotice.total} />
           </div>
         </aside>
 
@@ -56,7 +59,7 @@ export function AppShell({
             open ? "translate-x-0" : "-translate-x-full",
           )}
         >
-          <Sidebar user={user} pending={pending} onNavigate={() => setOpen(false)} />
+          <Sidebar user={user} pending={pending} examReady={examNotice.total} onNavigate={() => setOpen(false)} />
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
@@ -105,6 +108,7 @@ export function AppShell({
           </main>
         </div>
       </div>
+      <ExamReadyPopup notice={examNotice} />
     </div>
   );
 }

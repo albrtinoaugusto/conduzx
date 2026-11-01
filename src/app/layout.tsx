@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Poppins } from "next/font/google";
 import "./globals.css";
 
@@ -19,6 +19,9 @@ export const metadata: Metadata = {
   title: "ConduzX",
   description: "Gestão interna para escolas de condução em Moçambique",
 };
+
+// viewportFit: permite respeitar a zona segura (recorte/barra) dos telemóveis
+export const viewport: Viewport = { themeColor: "#181818", viewportFit: "cover" };
 
 export default function RootLayout({
   children,

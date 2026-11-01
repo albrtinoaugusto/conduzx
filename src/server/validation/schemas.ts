@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { parseMeticais } from "@/lib/money";
 import { FORMATS, MAX_FILE_SIZE, DOCUMENT_TYPES } from "@/server/domain/documents";
+import { todayInMaputo } from "@/server/domain/theory-exam";
 
 /** Texto opcional: "" → null, com trim. */
 const optionalText = (max = 200) =>
@@ -30,6 +31,31 @@ const moneyField = (required = true) =>
     });
 
 const uuid = z.string().uuid("Seleção inválida.");
+
+const isRealDate = (v: string) => /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(`${v}T00:00:00Z`));
+
+/** Inscrição: a data real indicada pelo operador nunca é futura; a primeira aula pode ser. */
+const enrollmentDateFields = {
+  enrollmentDate: z
+    .string()
+    .refine(isRealDate, "Indique a data de inscrição.")
+    .refine((v) => v <= todayInMaputo(), "A data de inscrição não pode ser futura."),
+  firstLessonDate: z
+    .string()
+    .optional()
+    .transform((v) => (v ? v : null))
+    .refine((v) => v === null || isRealDate(v), "Data da primeira aula inválida."),
+};
+
+function checkFirstLessonDate(v: { enrollmentDate: string; firstLessonDate: string | null }, c: z.RefinementCtx) {
+  if (v.firstLessonDate && v.firstLessonDate < v.enrollmentDate) {
+    c.addIssue({
+      code: "custom",
+      path: ["firstLessonDate"],
+      message: "A primeira aula não pode ser antes da data de inscrição.",
+    });
+  }
+}
 
 export const studentSchema = z.object({
   fullName: z
@@ -63,6 +89,7 @@ export const enrollmentSchema = z
     studentMode: z.enum(["existente", "novo"]),
     studentId: z.string().optional(),
     categoryId: uuid,
+    ...enrollmentDateFields,
     inatroStatus: z.enum(inatroStatuses),
     inatroProcessNumber: optionalText(60),
     inatroNote: optionalText(500),
@@ -71,6 +98,7 @@ export const enrollmentSchema = z
     reference: optionalText(80),
   })
   .superRefine((v, c) => {
+    checkFirstLessonDate(v, c);
     if (v.studentMode === "existente" && !z.string().uuid().safeParse(v.studentId).success) {
       c.addIssue({ code: "custom", path: ["studentId"], message: "Escolha o aluno." });
     }
@@ -82,6 +110,29 @@ export const enrollmentSchema = z
       });
     }
   });
+
+export const enrollmentDatesSchema = z
+  .object({ enrollmentId: uuid, ...enrollmentDateFields })
+  .superRefine(checkFirstLessonDate);
+
+export const grantPracticeAccessSchema = z.object({
+  studentId: uuid,
+  amount: moneyField(true),
+  method: z.enum(methods),
+  reference: optionalText(80),
+});
+
+export const voidPracticeAccessSchema = z.object({
+  accessId: uuid,
+  studentId: uuid,
+  reason: z.string().trim().min(5, "Explique o motivo (mín. 5 caracteres).").max(300),
+});
+
+export const studentLoginSchema = z.object({
+  schoolId: z.string().uuid("Escolha a sua escola."),
+  identifier: z.string().trim().min(5, "Indique o seu BI ou telefone.").max(40),
+  birthDate: z.string().refine(isRealDate, "Indique a sua data de nascimento."),
+});
 
 export const paymentSchema = z.object({
   enrollmentId: uuid,

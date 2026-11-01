@@ -1,0 +1,61 @@
+1. REGRAS DO EXAME E COMPORTAMENTO LÓGICO
+
+* Número Total de Perguntas: 25 questões de escolha múltipla.
+* Tempo Limite: 25 minutos no total (1 minuto por pergunta, gerido de forma global).
+* Critério de Aprovação: Mínimo de 22 respostas corretas (Aprovado).
+* Critério de Reprovação: 4 ou mais respostas erradas (Reprovado).
+* Cronómetro: Um contador decrescente (MM:SS) visível no topo da tela. Quando chega a 00:00, o sistema submete automaticamente o exame com as respostas assinaladas até ao momento.
+
+1. FLUXO DE COMPORTAMENTO E NAVEGAÇÃO
+
+* Seleção de Resposta: O candidato clica diretamente na opção desejada. A opção selecionada fica visualmente destacada.
+* Sem Avanço Automático: Ao clicar numa resposta, o sistema NÃO avança sozinho. O utilizador deve clicar explicitamente no botão de navegação.
+* Navegação Livre: O candidato pode avançar para a próxima pergunta ou retroceder para revisar questões anteriores antes de finalizar.
+* Estado das Perguntas: No topo ou na lateral, existe um mapa numérico (de 1 a 25) que muda de cor: 
+
+  * Cinzento/Branco: Pergunta ainda não visitada.
+  * Azul/Preenchido: Pergunta visualizada ou já respondida.
+
+1. ARQUITETURA VISUAL DA INTERFACE (MÁQUINA TÁTIL)
+O visual é minimalista, com cores sóbrias (predomínio de cinzento claro, azul escuro institucional e botões grandes estilo quiosque tátil).
+
+[ CABEÇALHO / TOPO ] 
+
+* Lado Esquerdo: Foto do candidato, Nome Completo e Número de Inscrição/ID.
+* Centro: Painel Numérico de Navegação Direta (botões quadrados de 1 a 25).
+* Lado Direito: Cronómetro regressivo em destaque (ex: "Tempo Restante: 23:14").
+
+[ CORPO CENTRAL - DIVIDIDO EM DUAS COLUNAS ] 
+
+* Coluna da Esquerda (Espaço Visual): 
+
+  * Exibe a imagem de suporte à pergunta (sinal de trânsito, fotografia de um cruzamento ou ilustração de prioridades).
+  * Se a pergunta não tiver imagem, este espaço exibe o logótipo do INATRO em marca de água.
+* Coluna da Direita (Texto e Opções): 
+
+  * No topo da coluna: O enunciado da pergunta em texto legível e tamanho grande.
+  * Abaixo do enunciado: Caixa com 3 a 4 opções de resposta (A, B, C, D). Cada opção é um botão retangular largo, facilitando o clique tátil.
+
+[ RODAPÉ - BOTÕES DE AÇÃO ]
+Alinhados horizontalmente na parte inferior da tela, os botões são grandes e coloridos: 
+
+* Botão "Anterior" (Esquerda / Cor Cinzenta ou Azul): Volta à pergunta anterior.
+* Botão "Seguinte" (Centro-Direita / Cor Azul Escuro): Avança para a próxima questão.
+* Botão "Terminar Exame" (Extremo Direito / Cor Verde ou Vermelha): Submete o teste para correção.
+
+1. MENSAGENS DO SISTEMA E CONFIRMAÇÕES
+
+* Ao clicar em "Terminar Exame": O sistema interrompe o fluxo e exibe um modal de confirmação centralizado com fundo opaco (overlay): 
+
+  * Mensagem: "Tem a certeza que deseja finalizar o seu exame? Não poderá alterar as suas respostas."
+  * Opções: Botão "Sim, Terminar" e Botão "Não, Voltar ao Exame".
+* Alerta de Questões em Branco: Se o utilizador tentar terminar o exame com perguntas sem resposta, o modal avisa: "Ainda tem X perguntas por responder. Deseja finalizar assim mesmo?"
+
+1. TELA DE RESULTADO FINAL (O FIM DO EXAME)
+Assim que o exame é finalizado ou o tempo expira, a interface bloqueia e exibe uma tela única com:
+
+* O veredicto em texto gigante e código de cores: 
+
+  * "APROVADO" (em verde) ou "REPROVADO" (em vermelho).
+* Métrica de Desempenho: "Respostas Corretas: X/25 | Respostas Erradas: Y/25".
+* Botão de Fechar/Sair para limpar o sistema para o próximo candidato.

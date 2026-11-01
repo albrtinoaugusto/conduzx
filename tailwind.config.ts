@@ -58,6 +58,36 @@ const config: Config = {
         shell: "0 30px 80px -20px rgba(0,0,0,0.8)",
         glow: "0 0 0 1px rgb(var(--brand-400) / 0.4), 0 8px 24px -8px rgb(var(--brand-400) / 0.55)",
       },
+      keyframes: {
+        "fade-up": {
+          from: { opacity: "0", transform: "translateY(10px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "slide-next": {
+          from: { opacity: "0", transform: "translateX(24px)" },
+          to: { opacity: "1", transform: "translateX(0)" },
+        },
+        "slide-prev": {
+          from: { opacity: "0", transform: "translateX(-24px)" },
+          to: { opacity: "1", transform: "translateX(0)" },
+        },
+        pop: {
+          "0%": { opacity: "0", transform: "scale(0.85)" },
+          "70%": { opacity: "1", transform: "scale(1.04)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
+        "tick-alert": {
+          "0%, 100%": { boxShadow: "0 0 0 0 rgb(var(--danger) / 0.5)" },
+          "50%": { boxShadow: "0 0 0 8px rgb(var(--danger) / 0)" },
+        },
+      },
+      animation: {
+        "fade-up": "fade-up 0.35s ease-out both",
+        "slide-next": "slide-next 0.25s ease-out both",
+        "slide-prev": "slide-prev 0.25s ease-out both",
+        pop: "pop 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.2) both",
+        "tick-alert": "tick-alert 1s ease-in-out infinite",
+      },
       backgroundImage: {
         dots: "radial-gradient(rgb(var(--brand-400)) 1.5px, transparent 1.5px)",
         stripes:

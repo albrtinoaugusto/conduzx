@@ -11,7 +11,9 @@ import {
   updateStudentStatusAction,
   updateInatroAction,
   recordPaymentAction,
+  updateEnrollmentDatesAction,
 } from "@/server/actions/enrollments";
+import { todayInMaputo } from "@/server/domain/theory-exam";
 
 export function RecordPayment({ enrollmentId, balanceCents }: { enrollmentId: string; balanceCents: number }) {
   if (balanceCents <= 0) {
@@ -121,6 +123,26 @@ export function InatroStatusForm({
       ) : null}
       <FormTextarea name="note" label="Nota" rows={2} defaultValue={note ?? ""} placeholder="Tentativas, falhas, o que falta…" />
       <SubmitButton variant="secondary">Guardar estado INATRO</SubmitButton>
+    </ActionForm>
+  );
+}
+
+export function EnrollmentDatesForm({
+  enrollmentId,
+  enrollmentDate,
+  firstLessonDate,
+}: {
+  enrollmentId: string;
+  enrollmentDate: string;
+  firstLessonDate: string | null;
+}) {
+  return (
+    <ActionForm action={updateEnrollmentDatesAction} className="flex flex-col gap-4">
+      <input type="hidden" name="enrollmentId" value={enrollmentId} />
+      <FormAlert />
+      <FormInput name="enrollmentDate" type="date" label="Data de inscrição *" defaultValue={enrollmentDate} max={todayInMaputo()} />
+      <FormInput name="firstLessonDate" type="date" label="Primeira aula" defaultValue={firstLessonDate ?? ""} />
+      <SubmitButton variant="secondary">Guardar datas</SubmitButton>
     </ActionForm>
   );
 }

@@ -20,7 +20,9 @@ import { summarizeFinancials } from "@/server/domain/finance";
 import { getStudent } from "@/server/services/students";
 import { listDocuments } from "@/server/services/documents";
 import { listHistory } from "@/server/services/history";
-import { UploadDocument, DocumentList } from "./documents";
+import { getPracticeAccess } from "@/server/services/practice-access";
+import { StudentDocuments } from "./documents";
+import { PracticeAccessPanel } from "./practice-access";
 
 export default async function StudentPage({
   params,
@@ -36,6 +38,7 @@ export default async function StudentPage({
   const { student, enrollments } = data;
 
   const documents = await listDocuments(ctx, student.id);
+  const practice = await getPracticeAccess(ctx, student.id);
   const history = can(ctx.role, "view_history")
     ? await listHistory(ctx, {
         entityIds: [student.id, ...enrollments.map((i) => i.id), ...documents.map((d) => d.id)],
@@ -49,12 +52,12 @@ export default async function StudentPage({
     ["Telefone", student.phone],
     ["Email", student.email],
     ["Morada", student.address],
-    ["Registado em", formatDate(student.createdAt)],
+    ["Registado no sistema em", formatDate(student.createdAt)],
   ];
 
   return (
     <>
-      {searchParams.created ? <Notice>Aluno registado com sucesso.</Notice> : null}
+      {searchParams.created ? <Notice>Aluno registado com sucesso. Pode carregar já a foto tipo passe e o BI.</Notice> : null}
       {searchParams.updated ? <Notice>Dados do aluno atualizados.</Notice> : null}
 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
@@ -90,17 +93,22 @@ export default async function StudentPage({
           <Card>
             <CardHeader
               title="Documentos"
-              description="BI, fotografia e comprovativos"
-              action={
-                can(ctx.role, "operate") ? (
-                  <UploadDocument
-                    studentId={student.id}
-                    enrollments={enrollments.map((i) => ({ id: i.id, category: i.category, enrollmentDate: i.enrollmentDate }))}
-                  />
-                ) : null
-              }
+              description="Foto tipo passe, BI e outros documentos"
             />
-            <DocumentList documents={documents} />
+            <StudentDocuments
+              studentId={student.id}
+              documents={documents}
+              enrollments={enrollments.map((i) => ({ id: i.id, category: i.category, enrollmentDate: i.enrollmentDate }))}
+              canUpload={can(ctx.role, "operate")}
+            />
+          </Card>
+
+          <Card>
+            <CardHeader
+              title="Testes no telemóvel"
+              description="O aluno entra no ConduzX pelo telemóvel com o BI ou telefone e a data de nascimento."
+            />
+            <PracticeAccessPanel studentId={student.id} access={practice} canVoid={can(ctx.role, "void_payment")} />
           </Card>
         </div>
 

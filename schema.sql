@@ -79,7 +79,12 @@ CREATE TABLE inscricoes (
 
   -- eixo 3 (pagamento) é CALCULADO a partir da tabela pagamentos (ver view abaixo)
 
+  -- data_inscricao: indicada pelo operador (pode ser no passado); criado_em: automática
   data_inscricao            date NOT NULL DEFAULT current_date,
+  -- a contagem de 45 dias para o exame teórico começa aqui
+  data_primeira_aula        date,
+  exame_aviso_visto_em      timestamptz,
+  exame_aviso_visto_por     uuid REFERENCES utilizadores(id),
   criado_por                uuid REFERENCES utilizadores(id),
   criado_em                 timestamptz NOT NULL DEFAULT now(),
   atualizado_em             timestamptz NOT NULL DEFAULT now(),
@@ -90,6 +95,10 @@ CREATE TABLE inscricoes (
 CREATE INDEX inscricoes_pendentes_idx
   ON inscricoes (escola_id, estado_inatro)
   WHERE eliminado_em IS NULL AND estado_inatro <> 'registado';
+
+CREATE INDEX inscricoes_primeira_aula_idx
+  ON inscricoes (escola_id, data_primeira_aula)
+  WHERE eliminado_em IS NULL AND data_primeira_aula IS NOT NULL;
 
 CREATE INDEX inscricoes_aluno_idx ON inscricoes (aluno_id);
 
@@ -139,6 +148,62 @@ CREATE TABLE historico (
 );
 
 CREATE INDEX historico_entidade_idx ON historico (entidade, entidade_id, criado_em DESC);
+
+-- Banco de perguntas: conteúdo da plataforma, comum a todas as escolas (sem escola_id).
+CREATE TABLE perguntas_teste (
+  id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  enunciado  text NOT NULL UNIQUE,
+  imagem_url text,
+  opcoes     jsonb NOT NULL,
+  correta    smallint NOT NULL CHECK (correta BETWEEN 0 AND 3),
+  ativo      boolean NOT NULL DEFAULT true,
+  criado_em  timestamptz NOT NULL DEFAULT now()
+);
+
+-- Venda do acesso aos testes: registada pela secretaria, nunca apagada; anula-se com motivo.
+CREATE TABLE acessos_testes (
+  id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  escola_id       uuid NOT NULL REFERENCES escolas(id),
+  aluno_id        uuid NOT NULL REFERENCES alunos(id),
+  valor_centavos  bigint NOT NULL CHECK (valor_centavos > 0),
+  metodo          metodo_pagamento NOT NULL DEFAULT 'dinheiro',
+  referencia      text,
+  concedido_por   uuid REFERENCES utilizadores(id),
+  criado_em       timestamptz NOT NULL DEFAULT now(),
+  anulado_em      timestamptz,
+  anulado_por     uuid REFERENCES utilizadores(id),
+  motivo_anulacao text,
+  CHECK ((anulado_em IS NULL) = (motivo_anulacao IS NULL))
+);
+
+CREATE UNIQUE INDEX acessos_testes_ativo_unico
+  ON acessos_testes (escola_id, aluno_id) WHERE anulado_em IS NULL;
+
+-- Cada realização de um teste. O servidor é quem guarda o tempo e corrige.
+CREATE TABLE tentativas_teste (
+  id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  escola_id    uuid NOT NULL REFERENCES escolas(id),
+  aluno_id     uuid NOT NULL REFERENCES alunos(id),
+  perguntas    jsonb NOT NULL,
+  respostas    jsonb NOT NULL DEFAULT '{}'::jsonb,
+  iniciado_em  timestamptz NOT NULL DEFAULT now(),
+  expira_em    timestamptz NOT NULL,
+  terminado_em timestamptz,
+  certas       smallint,
+  erradas      smallint,
+  aprovado     boolean
+);
+
+CREATE INDEX tentativas_teste_aluno_idx ON tentativas_teste (escola_id, aluno_id, iniciado_em DESC);
+CREATE UNIQUE INDEX tentativas_teste_aberta_unica ON tentativas_teste (aluno_id) WHERE terminado_em IS NULL;
+
+-- Limite de tentativas de entrada no portal do aluno. A chave é um hash (sem BI/telefone em claro).
+CREATE TABLE tentativas_login_aluno (
+  chave         text PRIMARY KEY,
+  falhas        smallint NOT NULL DEFAULT 0,
+  bloqueado_ate timestamptz,
+  atualizado_em timestamptz NOT NULL DEFAULT now()
+);
 
 -- Eixo 3: situacao financeira calculada (nunca digitada a mao)
 CREATE VIEW inscricoes_financeiro AS

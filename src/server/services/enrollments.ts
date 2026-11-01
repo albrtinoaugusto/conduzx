@@ -37,6 +37,7 @@ const listColumns = {
   inatroNote: enrollments.inatroNote,
   inatroLastAttempt: enrollments.inatroLastAttempt,
   enrollmentDate: enrollments.enrollmentDate,
+  firstLessonDate: enrollments.firstLessonDate,
   createdAt: enrollments.createdAt,
   total: enrollmentFinancials.totalPriceCents,
   paid: enrollmentFinancials.paidCents,
@@ -134,6 +135,8 @@ export async function getEnrollment(ctx: Ctx, id: string) {
 export type NewEnrollmentInput = {
   student: { existingId: string } | { newStudent: StudentInput };
   categoryId: string;
+  enrollmentDate: string;
+  firstLessonDate: string | null;
   inatroStatus: InatroStatus;
   inatroProcessNumber: string | null;
   inatroNote: string | null;
@@ -173,6 +176,8 @@ export async function createEnrollment(ctx: Ctx, input: NewEnrollmentInput) {
         studentId,
         categoryId: category.id,
         totalPriceCents: category.priceCents, // preço congelado
+        enrollmentDate: input.enrollmentDate,
+        firstLessonDate: input.firstLessonDate,
         inatroStatus: input.inatroStatus,
         inatroProcessNumber: input.inatroStatus === "registado" ? input.inatroProcessNumber : null,
         inatroNote: input.inatroNote,
@@ -185,6 +190,8 @@ export async function createEnrollment(ctx: Ctx, input: NewEnrollmentInput) {
       studentId,
       category: category.code,
       priceCents: category.priceCents,
+      enrollmentDate: input.enrollmentDate,
+      firstLessonDate: input.firstLessonDate,
       inatroStatus: input.inatroStatus,
     });
 
@@ -249,6 +256,38 @@ export async function updateInatro(
       current.status === status ? "nova_tentativa_inatro" : "alterou_estado_inatro",
       { from: current.status, to: status, processNumber: status === "registado" ? processNumber : undefined, note: note ?? undefined },
     );
+  });
+}
+
+/** Corrige as datas. Mudar a primeira aula volta a contar o aviso do exame teórico. */
+export async function updateEnrollmentDates(
+  ctx: Ctx,
+  { enrollmentId, enrollmentDate, firstLessonDate }: { enrollmentId: string; enrollmentDate: string; firstLessonDate: string | null },
+) {
+  await db.transaction(async (tx) => {
+    const [current] = await tx
+      .select({ enrollmentDate: enrollments.enrollmentDate, firstLessonDate: enrollments.firstLessonDate })
+      .from(enrollments)
+      .where(and(eq(enrollments.id, enrollmentId), inSchool(ctx)))
+      .for("update")
+      .limit(1);
+    if (!current) throw new BusinessError("Inscrição não encontrada.");
+    if (current.enrollmentDate === enrollmentDate && current.firstLessonDate === firstLessonDate) return;
+
+    const firstLessonChanged = current.firstLessonDate !== firstLessonDate;
+    await tx
+      .update(enrollments)
+      .set({
+        enrollmentDate,
+        firstLessonDate,
+        updatedAt: new Date(),
+        ...(firstLessonChanged ? { examNoticeSeenAt: null, examNoticeSeenBy: null } : {}),
+      })
+      .where(and(eq(enrollments.id, enrollmentId), eq(enrollments.schoolId, ctx.schoolId)));
+    await logHistory(tx, ctx, "inscricao", enrollmentId, "alterou_datas_inscricao", {
+      enrollmentDate: { from: current.enrollmentDate, to: enrollmentDate },
+      firstLessonDate: { from: current.firstLessonDate, to: firstLessonDate },
+    });
   });
 }
 

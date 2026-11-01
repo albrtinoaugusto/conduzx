@@ -3,6 +3,7 @@ import {
   IconClock,
   IconDashboard,
   IconHistory,
+  IconShield,
   IconTag,
   IconUserCog,
   IconUsers,
@@ -24,6 +25,7 @@ export const mainNav = [
   { href: "/inscricoes", label: "Inscrições", icon: IconClipboard },
   { href: "/pagamentos", label: "Pagamentos", icon: IconWallet },
   { href: "/pendencias", label: "Pendências", icon: IconClock },
+  { href: "/exames", label: "Exame teórico", icon: IconShield },
 ];
 
 export const superAdminNav = [
@@ -48,6 +50,7 @@ export const pageTitles: Record<string, string> = {
   "/inscricoes": "Inscrições",
   "/pagamentos": "Pagamentos",
   "/pendencias": "Pendências INATRO",
+  "/exames": "Exame teórico",
   "/categorias": "Categorias de carta",
   "/utilizadores": "Utilizadores",
   "/historico": "Histórico",

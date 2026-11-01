@@ -15,6 +15,7 @@ import {
   pgTable,
   pgView,
   numeric,
+  smallint,
   text,
   timestamp,
   unique,
@@ -130,9 +131,13 @@ export const enrollments = pgTable(
     inatroProcessNumber: text("inatro_numero_processo"),
     inatroLastAttempt: tz("inatro_ultima_tentativa"),
     inatroNote: text("inatro_nota"),
+    // Indicada pelo operador; pode ser no passado. A data de registo no sistema é createdAt.
     enrollmentDate: date("data_inscricao")
       .notNull()
       .default(sql`current_date`),
+    firstLessonDate: date("data_primeira_aula"),
+    examNoticeSeenAt: tz("exame_aviso_visto_em"),
+    examNoticeSeenBy: uuid("exame_aviso_visto_por").references(() => users.id),
     createdBy: uuid("criado_por").references(() => users.id),
     createdAt: tz("criado_em").notNull().defaultNow(),
     updatedAt: tz("atualizado_em").notNull().defaultNow(),
@@ -218,6 +223,60 @@ export const history = pgTable(
     ),
   ],
 );
+
+/** Conteúdo da plataforma, comum a todas as escolas (exceção à regra do escola_id). */
+export const practiceQuestions = pgTable("perguntas_teste", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  text: text("enunciado").notNull().unique(),
+  imageUrl: text("imagem_url"),
+  options: jsonb("opcoes").$type<string[]>().notNull(),
+  correct: smallint("correta").notNull(),
+  active: boolean("ativo").notNull().default(true),
+  createdAt: tz("criado_em").notNull().defaultNow(),
+});
+
+export const practiceAccess = pgTable("acessos_testes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  schoolId: uuid("escola_id")
+    .notNull()
+    .references(() => schools.id),
+  studentId: uuid("aluno_id")
+    .notNull()
+    .references(() => students.id),
+  amountCents: money("valor_centavos").notNull(),
+  method: paymentMethod("metodo").notNull().default("dinheiro"),
+  reference: text("referencia"),
+  grantedBy: uuid("concedido_por").references(() => users.id),
+  createdAt: tz("criado_em").notNull().defaultNow(),
+  voidedAt: tz("anulado_em"),
+  voidedBy: uuid("anulado_por").references(() => users.id),
+  voidReason: text("motivo_anulacao"),
+});
+
+export const practiceAttempts = pgTable("tentativas_teste", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  schoolId: uuid("escola_id")
+    .notNull()
+    .references(() => schools.id),
+  studentId: uuid("aluno_id")
+    .notNull()
+    .references(() => students.id),
+  questionIds: jsonb("perguntas").$type<string[]>().notNull(),
+  answers: jsonb("respostas").$type<Record<string, number>>().notNull().default({}),
+  startedAt: tz("iniciado_em").notNull().defaultNow(),
+  expiresAt: tz("expira_em").notNull(),
+  finishedAt: tz("terminado_em"),
+  correctCount: smallint("certas"),
+  wrongCount: smallint("erradas"),
+  passed: boolean("aprovado"),
+});
+
+export const studentLoginAttempts = pgTable("tentativas_login_aluno", {
+  key: text("chave").primaryKey(),
+  failures: smallint("falhas").notNull().default(0),
+  blockedUntil: tz("bloqueado_ate"),
+  updatedAt: tz("atualizado_em").notNull().defaultNow(),
+});
 
 /** View criada na migração 0001 (cópia de schema.sql). `.existing()` = o drizzle-kit não a gere. */
 export const enrollmentFinancials = pgView("inscricoes_financeiro", {

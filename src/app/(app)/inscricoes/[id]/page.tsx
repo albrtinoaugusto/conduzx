@@ -9,6 +9,7 @@ import {
   CardHeader,
   PaymentBadge,
   InatroBadge,
+  Progress,
   Ring,
   Table,
   TBody,
@@ -22,9 +23,11 @@ import { formatDate, formatDateTime, methodLabel } from "@/lib/labels";
 import { requireContext } from "@/server/auth/session";
 import { summarizeFinancials } from "@/server/domain/finance";
 import { can } from "@/server/domain/permissions";
+import { THEORY_EXAM_DAYS, theoryExamProgress } from "@/server/domain/theory-exam";
 import { listHistory } from "@/server/services/history";
 import { getEnrollment } from "@/server/services/enrollments";
 import {
+  EnrollmentDatesForm,
   VoidPayment,
   StudentStatusForm,
   InatroStatusForm,
@@ -44,6 +47,7 @@ export default async function EnrollmentPage({
   if (!i) notFound();
 
   const f = summarizeFinancials(i.total, i.paid);
+  const exam = i.firstLessonDate ? theoryExamProgress(i.firstLessonDate) : null;
   const canVoid = can(ctx.role, "void_payment");
   const history = can(ctx.role, "view_history")
     ? await listHistory(ctx, { entityIds: [i.id, ...i.payments.map((p) => p.id)], limit: 20 })
@@ -159,6 +163,27 @@ export default async function EnrollmentPage({
               description={i.inatroLastAttempt ? `Última tentativa: ${formatDateTime(i.inatroLastAttempt)}` : "Estado manual - não há integração"}
             />
             <InatroStatusForm enrollmentId={i.id} status={i.inatroStatus} processNumber={i.inatroProcessNumber} note={i.inatroNote} />
+          </Card>
+          <Card>
+            <CardHeader
+              title="Datas e exame teórico"
+              description={`Registado no sistema em ${formatDate(i.createdAt)} (automático)`}
+            />
+            {exam ? (
+              <div className="mb-4">
+                <Progress value={exam.percentage} tone={exam.ready ? "success" : "warning"} />
+                <p className="mt-2 text-sm font-semibold text-ink">
+                  {exam.ready
+                    ? `Pronto para o exame teórico desde ${formatDate(exam.readyDate)}`
+                    : exam.started
+                      ? `Faltam ${exam.daysLeft} dia(s) para o exame teórico`
+                      : `A contagem começa a ${formatDate(i.firstLessonDate)}`}
+                </p>
+              </div>
+            ) : (
+              <p className="mb-4 rounded-xl bg-night-700/50 p-3 text-xs text-muted">Indique a primeira aula para iniciar a contagem de {THEORY_EXAM_DAYS} dias.</p>
+            )}
+            <EnrollmentDatesForm enrollmentId={i.id} enrollmentDate={i.enrollmentDate} firstLessonDate={i.firstLessonDate} />
           </Card>
           <Card>
             <StudentStatusForm enrollmentId={i.id} status={i.studentStatus} />

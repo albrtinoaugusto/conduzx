@@ -28,8 +28,8 @@ export const studentStatusLabel: Record<string, string> = {
 };
 
 export const documentTypeLabel: Record<string, string> = {
-  bi: "BI digitalizado",
-  foto: "Fotografia",
+  bi: "BI",
+  foto: "Foto tipo passe",
   comprovativo: "Comprovativo",
   outro: "Outro",
 };
@@ -47,6 +47,10 @@ const fullActions: Record<string, string> = {
   alterou_estado_inatro: "alterou o estado INATRO da inscrição",
   nova_tentativa_inatro: "registou nova tentativa no INATRO",
   alterou_estado_aluno: "alterou a situação do aluno",
+  alterou_datas_inscricao: "alterou as datas da inscrição",
+  confirmou_aviso_exame: "confirmou o aviso do exame teórico",
+  ativou_testes: "ativou o acesso aos testes",
+  anulou_testes: "anulou o acesso aos testes",
 };
 
 const entityLabels: Record<string, string> = {

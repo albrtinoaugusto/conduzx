@@ -18,6 +18,7 @@ import { parseMeticais } from "@/lib/money";
 import { methodLabel } from "@/lib/labels";
 import { searchStudentsAction } from "@/server/actions/students";
 import { createEnrollmentAction } from "@/server/actions/enrollments";
+import { THEORY_EXAM_DAYS, todayInMaputo } from "@/server/domain/theory-exam";
 import { StudentFields } from "../../alunos/student-fields";
 
 type Category = { id: string; name: string; priceCents: number };
@@ -120,6 +121,7 @@ export function NewEnrollmentForm({ categories, initialStudent }: { categories: 
   const [categoryId, setCategoryId] = useState(categories[0]?.id ?? "");
   const [amount, setAmount] = useState("");
   const [inatro, setInatro] = useState<"nao_registado" | "pendente" | "registado">("nao_registado");
+  const today = todayInMaputo();
 
   const category = categories.find((c) => c.id === categoryId);
   const amountCents = amount ? parseMeticais(amount) : 0;
@@ -166,6 +168,22 @@ export function NewEnrollmentForm({ categories, initialStudent }: { categories: 
             ))}
           </FormSelect>
           <p className="mt-2 text-xs text-subtle">O preço fica guardado nesta inscrição, mesmo que a tabela de preços mude depois.</p>
+          <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <FormInput
+              name="enrollmentDate"
+              type="date"
+              label="Data de inscrição *"
+              defaultValue={today}
+              max={today}
+              hint="Se o aluno se matriculou antes, indique a data real."
+            />
+            <FormInput
+              name="firstLessonDate"
+              type="date"
+              label="Primeira aula"
+              hint={`Inicia a contagem de ${THEORY_EXAM_DAYS} dias para o exame teórico.`}
+            />
+          </div>
         </Step>
 
         <Step n={3} title="Primeiro pagamento (opcional)">

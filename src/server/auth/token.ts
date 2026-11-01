@@ -9,7 +9,12 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 export const SESSION_COOKIE = "conduzx_sessao";
 export const SESSION_DURATION_S = 60 * 60 * 12; // 12 horas
 
+/** Sessão do portal do aluno: cookie e campo próprios, nunca aceite como sessão de funcionário. */
+export const STUDENT_COOKIE = "conduzx_aluno";
+export const STUDENT_SESSION_DURATION_S = 60 * 60 * 24 * 7; // 7 dias
+
 type Payload = { uid: string; exp: number };
+type StudentPayload = { sid: string; exp: number };
 
 function secret() {
   const s = process.env.SESSION_SECRET;
@@ -29,7 +34,7 @@ export function createToken(uid: string, now = Date.now()): string {
   return `${data}.${sign(data)}`;
 }
 
-export function readToken(token: string | undefined, now = Date.now()): string | null {
+function verifiedPayload(token: string | undefined): unknown {
   if (!token) return null;
   const [data, signature] = token.split(".");
   if (!data || !signature) return null;
@@ -41,10 +46,26 @@ export function readToken(token: string | undefined, now = Date.now()): string |
   }
 
   try {
-    const payload = JSON.parse(Buffer.from(data, "base64url").toString()) as Payload;
-    if (typeof payload.uid !== "string" || payload.exp * 1000 < now) return null;
-    return payload.uid;
+    return JSON.parse(Buffer.from(data, "base64url").toString());
   } catch {
     return null;
   }
+}
+
+export function readToken(token: string | undefined, now = Date.now()): string | null {
+  const payload = verifiedPayload(token) as Payload | null;
+  if (!payload || typeof payload.uid !== "string" || payload.exp * 1000 < now) return null;
+  return payload.uid;
+}
+
+export function createStudentToken(sid: string, now = Date.now()): string {
+  const payload: StudentPayload = { sid, exp: Math.floor(now / 1000) + STUDENT_SESSION_DURATION_S };
+  const data = Buffer.from(JSON.stringify(payload)).toString("base64url");
+  return `${data}.${sign(data)}`;
+}
+
+export function readStudentToken(token: string | undefined, now = Date.now()): string | null {
+  const payload = verifiedPayload(token) as StudentPayload | null;
+  if (!payload || typeof payload.sid !== "string" || payload.exp * 1000 < now) return null;
+  return payload.sid;
 }

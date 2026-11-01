@@ -42,6 +42,9 @@ export async function uploadDocument(
 ) {
   const mime = detectFormat(data.content);
   if (!mime) throw new BusinessError("O ficheiro não é um PDF, JPG ou PNG válido.", "file");
+  if (data.type === "foto" && mime === "application/pdf") {
+    throw new BusinessError("A foto tipo passe deve ser uma imagem JPG ou PNG.", "file");
+  }
 
   const [student] = await db
     .select({ id: students.id })
@@ -68,7 +71,7 @@ export async function uploadDocument(
 
   // Primeiro o ficheiro: se a base de dados falhar fica só um ficheiro órfão, nunca um registo sem ficheiro.
   const storageKey = newStorageKey(ctx.schoolId);
-  await storage.save(storageKey, data.content);
+  await storage.save(storageKey, data.content, mime);
 
   return db.transaction(async (tx) => {
     const [created] = await tx
@@ -91,6 +94,19 @@ export async function uploadDocument(
     });
     return created.id;
   });
+}
+
+/** Foto tipo passe mais recente do aluno, para o próprio aluno no portal. */
+export async function getStudentPhoto(schoolId: string, studentId: string) {
+  const [doc] = await db
+    .select({ storageKey: documents.storageKey, mimeType: documents.mimeType })
+    .from(documents)
+    .where(and(eq(documents.schoolId, schoolId), eq(documents.studentId, studentId), eq(documents.type, "foto")))
+    .orderBy(desc(documents.createdAt))
+    .limit(1);
+  if (!doc) return null;
+  const content = await storage.read(doc.storageKey);
+  return content ? { mimeType: doc.mimeType, content } : null;
 }
 
 /** Documento e conteúdo, apenas se pertencer à escola do utilizador. */

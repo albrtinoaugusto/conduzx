@@ -2,13 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { z } from "zod";
 import { requireContext } from "@/server/auth/session";
 import type { FormState } from "@/server/errors";
 import {
   updateStudentStatus,
   updateInatro,
   createEnrollment,
+  updateEnrollmentDates,
 } from "@/server/services/enrollments";
+import { acknowledgeExamNotice } from "@/server/services/theory-exam";
 import { voidPayment, recordPayment } from "@/server/services/payments";
 import {
   studentSchema,
@@ -18,6 +21,7 @@ import {
   formToObject,
   inatroSchema,
   enrollmentSchema,
+  enrollmentDatesSchema,
   paymentSchema,
 } from "@/server/validation/schemas";
 import { errorToState, invalid, success } from "./util";
@@ -45,6 +49,8 @@ export async function createEnrollmentAction(_: FormState, fd: FormData): Promis
     const res = await createEnrollment(ctx, {
       student: studentResult?.success ? { newStudent: studentResult.data } : { existingId: d.studentId! },
       categoryId: d.categoryId,
+      enrollmentDate: d.enrollmentDate,
+      firstLessonDate: d.firstLessonDate,
       inatroStatus: d.inatroStatus,
       inatroProcessNumber: d.inatroProcessNumber,
       inatroNote: d.inatroNote,
@@ -108,6 +114,35 @@ export async function updateInatroAction(_: FormState, fd: FormData): Promise<Fo
   }
   revalidateAll(r.data.enrollmentId);
   return success(r.data.status === "registado" ? "Marcado como registado no INATRO." : "Estado do INATRO atualizado.");
+}
+
+export async function updateEnrollmentDatesAction(_: FormState, fd: FormData): Promise<FormState> {
+  const ctx = await requireContext("operate");
+  const r = enrollmentDatesSchema.safeParse(formToObject(fd));
+  if (!r.success) return invalid(zodErrors(r.error));
+  try {
+    await updateEnrollmentDates(ctx, r.data);
+  } catch (e) {
+    return errorToState(e);
+  }
+  revalidateAll(r.data.enrollmentId);
+  return success("Datas atualizadas.");
+}
+
+/** "Avisado": o aluno sai do aviso, mas continua na lista de prontos para o exame. */
+export async function acknowledgeExamNoticeAction(_: FormState, fd: FormData): Promise<FormState> {
+  const ctx = await requireContext("operate");
+  const ids = fd.getAll("enrollmentId").map(String);
+  if (ids.length === 0 || ids.length > 100 || !ids.every((id) => z.string().uuid().safeParse(id).success)) {
+    return { error: "Seleção inválida.", t: Date.now() };
+  }
+  try {
+    await acknowledgeExamNotice(ctx, ids);
+  } catch (e) {
+    return errorToState(e);
+  }
+  revalidateAll();
+  return success("Aviso confirmado.");
 }
 
 export async function updateStudentStatusAction(_: FormState, fd: FormData): Promise<FormState> {

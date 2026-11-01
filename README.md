@@ -68,6 +68,7 @@ Palavra-passe de todas: `conduzx123`
 - `npm run db:migrate` aplica as migrações (pasta `drizzle/`).
 - `npm run db:seed` apaga e recria os dados de exemplo.
 - `npm run db:generate` gera uma migração a partir de `src/server/db/schema.ts`.
+- `npm run db:questions -- ficheiro.json [--replace]` carrega o banco de perguntas dos testes (formato em `scripts/import-questions.ts`; `scripts/perguntas-demonstracao.json` é só para demonstração).
 
 ## Fases do MVP
 
