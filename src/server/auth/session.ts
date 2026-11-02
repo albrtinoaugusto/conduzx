@@ -6,6 +6,7 @@ import { cache } from "react";
 import { db } from "@/server/db";
 import { schools, users, type UserRole } from "@/server/db/schema";
 import { can, type Permission } from "@/server/domain/permissions";
+import { schoolBlock, type SchoolBlock } from "@/server/domain/school-access";
 import { SESSION_COOKIE, SESSION_DURATION_S, createToken, readToken } from "./token";
 
 /** Contexto por pedido; contas globais não têm escola associada. */
@@ -15,6 +16,8 @@ export type Ctx = {
   role: UserRole;
   name: string;
   schoolName: string;
+  /** Motivo pelo qual a escola não pode usar o sistema (suspensa, eliminada, teste terminado). */
+  blocked: SchoolBlock | null;
 };
 
 export function startSession(userId: string) {
@@ -43,19 +46,34 @@ export const getContext = cache(async (): Promise<Ctx | null> => {
       role: users.role,
       name: users.name,
       schoolName: schools.name,
+      schoolCreatedAt: schools.createdAt,
+      suspendedAt: schools.suspendedAt,
+      deletedAt: schools.deletedAt,
+      trialDays: schools.trialDays,
     })
     .from(users)
     .leftJoin(schools, eq(schools.id, users.schoolId))
     .where(and(eq(users.id, uid), eq(users.active, true)))
     .limit(1);
 
-  return row ? { ...row, schoolId: row.schoolId ?? "", schoolName: row.schoolName ?? "Administração ConduzX" } : null;
+  if (!row) return null;
+  return {
+    userId: row.userId,
+    schoolId: row.schoolId ?? "",
+    role: row.role,
+    name: row.name,
+    schoolName: row.schoolName ?? "Administração ConduzX",
+    blocked: row.schoolCreatedAt
+      ? schoolBlock({ createdAt: row.schoolCreatedAt, suspendedAt: row.suspendedAt, deletedAt: row.deletedAt, trialDays: row.trialDays })
+      : null,
+  };
 });
 
 /** Para páginas e server actions: exige sessão (e permissão, se indicada). */
 export async function requireContext(action?: Permission): Promise<Ctx> {
   const ctx = await getContext();
   if (!ctx) redirect("/login");
+  if (ctx.blocked) redirect("/acesso-bloqueado");
   if (action && !ctx.schoolId) redirect("/admin?forbidden=1");
   if (action && !can(ctx.role, action)) redirect("/?forbidden=1");
   return ctx;

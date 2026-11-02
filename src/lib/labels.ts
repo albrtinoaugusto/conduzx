@@ -51,6 +51,10 @@ const fullActions: Record<string, string> = {
   confirmou_aviso_exame: "confirmou o aviso do exame teórico",
   ativou_testes: "ativou o acesso aos testes",
   anulou_testes: "anulou o acesso aos testes",
+  alterou_trial: "alterou o período de teste da empresa",
+  suspendeu: "suspendeu a empresa",
+  reativou: "reativou a empresa",
+  eliminou: "eliminou a empresa",
 };
 
 const entityLabels: Record<string, string> = {

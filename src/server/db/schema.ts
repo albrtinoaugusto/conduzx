@@ -10,6 +10,7 @@ import {
   check,
   date,
   index,
+  integer,
   jsonb,
   pgEnum,
   pgTable,
@@ -54,6 +55,10 @@ export const schools = pgTable("escolas", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("nome").notNull(),
   phone: text("telefone"),
+  suspendedAt: tz("suspensa_em"),
+  deletedAt: tz("eliminada_em"),
+  /** Dias de teste a contar de criado_em; null = sem limite. */
+  trialDays: integer("trial_dias").default(45),
   createdAt: tz("criado_em").notNull().defaultNow(),
 });
 

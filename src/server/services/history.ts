@@ -4,7 +4,7 @@ import { db, type Tx } from "@/server/db";
 import { history, users } from "@/server/db/schema";
 import type { Ctx } from "@/server/auth/session";
 
-export type Entity = "aluno" | "inscricao" | "pagamento" | "categoria" | "utilizador" | "documento";
+export type Entity = "aluno" | "inscricao" | "pagamento" | "categoria" | "utilizador" | "documento" | "empresa";
 
 /**
  * Regista uma ação no histórico. Chamar SEMPRE dentro da mesma transação da alteração.

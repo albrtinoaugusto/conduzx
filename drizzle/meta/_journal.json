@@ -29,6 +29,13 @@
       "when": 1793540000000,
       "tag": "0003_exame_portal_aluno",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793640000000,
+      "tag": "0004_estado_empresas",
+      "breakpoints": true
     }
   ]
 }

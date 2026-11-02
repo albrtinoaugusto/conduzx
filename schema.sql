@@ -11,6 +11,9 @@ CREATE TABLE escolas (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   nome        text NOT NULL,
   telefone    text,
+  suspensa_em  timestamptz,
+  eliminada_em timestamptz,                -- eliminação lógica: os dados mantêm-se
+  trial_dias   integer DEFAULT 45 CHECK (trial_dias BETWEEN 1 AND 3650),  -- NULL = sem limite; conta desde criado_em
   criado_em   timestamptz NOT NULL DEFAULT now()
 );
 

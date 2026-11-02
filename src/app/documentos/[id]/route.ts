@@ -13,6 +13,7 @@ const notFoundResponse = () => new Response("Documento não encontrado.", { stat
 export async function GET(req: Request, { params }: { params: { id: string } }) {
   const ctx = await getContext();
   if (!ctx) return new Response("Sessão expirada.", { status: 401 });
+  if (ctx.blocked) return new Response("Acesso indisponível.", { status: 403 });
   if (!can(ctx.role, "operate") || !/^[0-9a-f-]{36}$/i.test(params.id)) return notFoundResponse();
 
   const doc = await getDocumentFile(ctx, params.id);

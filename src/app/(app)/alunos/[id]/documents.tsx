@@ -10,6 +10,7 @@ import { cn } from "@/lib/cn";
 import { formatDate, documentTypeLabel } from "@/lib/labels";
 import { uploadDocumentAction } from "@/server/actions/documents";
 import { MAX_FILE_SIZE } from "@/server/domain/documents";
+import { PhotoCropper } from "./photo-cropper";
 
 type DocumentItem = {
   id: string;
@@ -54,9 +55,16 @@ function DocumentRow({ d }: { d: DocumentItem }) {
   );
 }
 
-function SlotButton({ label, accept, onError }: { label: string; accept: string; onError: (m?: string) => void }) {
+function SlotButton({ label, accept, crop, onError }: { label: string; accept: string; crop: boolean; onError: (m?: string) => void }) {
   const { pending } = useFormStatus();
   const input = useRef<HTMLInputElement>(null);
+  const [toCrop, setToCrop] = useState<File>();
+
+  function closeCropper() {
+    if (input.current) input.current.value = "";
+    setToCrop(undefined);
+  }
+
   return (
     <>
       <input
@@ -70,19 +78,50 @@ function SlotButton({ label, accept, onError }: { label: string; accept: string;
         onChange={(ev) => {
           const f = ev.currentTarget.files?.[0];
           if (!f) return;
+          onError(undefined);
+          // O recorte reduz a foto, por isso o limite de tamanho só se aplica aos ficheiros enviados tal como estão
+          if (crop) {
+            setToCrop(f);
+            return;
+          }
           if (f.size > MAX_FILE_SIZE) {
             ev.currentTarget.value = "";
             onError(SIZE_ERROR);
             return;
           }
-          onError(undefined);
           ev.currentTarget.form?.requestSubmit();
         }}
       />
-      <button type="button" disabled={pending} onClick={() => input.current?.click()} className={buttonClasses("secondary", "sm")}>
+      <button
+        type="button"
+        disabled={pending}
+        onClick={() => {
+          // Permite voltar a escolher o mesmo ficheiro depois de cancelar o recorte
+          if (input.current) input.current.value = "";
+          input.current?.click();
+        }}
+        className={buttonClasses("secondary", "sm")}
+      >
         {pending ? <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-r-transparent" /> : null}
         {pending ? "A carregar…" : label}
       </button>
+      {toCrop ? (
+        <PhotoCropper
+          file={toCrop}
+          onCancel={closeCropper}
+          onError={(message) => {
+            closeCropper();
+            onError(message);
+          }}
+          onConfirm={(cropped) => {
+            const transfer = new DataTransfer();
+            transfer.items.add(cropped);
+            if (input.current) input.current.files = transfer.files;
+            setToCrop(undefined);
+            input.current?.form?.requestSubmit();
+          }}
+        />
+      ) : null}
     </>
   );
 }
@@ -135,7 +174,7 @@ function DocumentSlot({
           <input type="hidden" name="studentId" value={studentId} />
           <input type="hidden" name="type" value={type} />
           <div className="flex flex-wrap items-center gap-2">
-            {canUpload ? <SlotButton label={current ? "Substituir" : "Carregar"} accept={accept} onError={setLocalError} /> : null}
+            {canUpload ? <SlotButton label={current ? "Substituir" : "Carregar"} accept={accept} crop={type === "foto"} onError={setLocalError} /> : null}
             {current ? (
               <a href={`/documentos/${current.id}`} className={buttonClasses("ghost", "sm")}>
                 <IconDownload size={14} />
@@ -235,7 +274,7 @@ export function StudentDocuments({
 
   return (
     <div className="flex flex-col gap-3">
-      <DocumentSlot studentId={studentId} type="foto" title="Foto tipo passe" hint="JPG ou PNG · máximo 5 MB" accept={IMAGE_ACCEPT} current={photo} canUpload={canUpload} />
+      <DocumentSlot studentId={studentId} type="foto" title="Foto tipo passe" hint="JPG ou PNG · recorta antes de guardar" accept={IMAGE_ACCEPT} current={photo} canUpload={canUpload} />
       <DocumentSlot studentId={studentId} type="bi" title="BI" hint="PDF, JPG ou PNG · máximo 5 MB" accept={ANY_ACCEPT} current={idCard} canUpload={canUpload} />
       <div className="mt-2 flex items-center justify-between gap-2">
         <p className="text-sm font-semibold text-ink">Outros documentos</p>

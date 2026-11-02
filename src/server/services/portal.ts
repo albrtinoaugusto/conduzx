@@ -19,7 +19,7 @@ const LOCK_MINUTES = 15;
 
 /** Só id e nome: é a única informação da escola visível antes de entrar. */
 export function listSchoolsForLogin() {
-  return db.select({ id: schools.id, name: schools.name }).from(schools).orderBy(asc(schools.name));
+  return db.select({ id: schools.id, name: schools.name }).from(schools).where(isNull(schools.deletedAt)).orderBy(asc(schools.name));
 }
 
 async function registerFailure(key: string) {

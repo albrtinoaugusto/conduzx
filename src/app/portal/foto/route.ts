@@ -7,6 +7,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const student = await getStudentContext();
   if (!student) return new Response(null, { status: 401 });
+  if (student.blocked) return new Response(null, { status: 403 });
   const photo = await getStudentPhoto(student.schoolId, student.studentId);
   if (!photo) return new Response(null, { status: 404 });
   return new Response(photo.content, {

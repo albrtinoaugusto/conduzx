@@ -4,7 +4,7 @@ import { isMobileRequest } from "@/lib/device";
 // Verificação leve: só confirma a existência do cookie.
 // A assinatura e o estado do utilizador são validados no servidor (sessao.ts).
 // /entrar e /portal têm a sua própria autenticação (aluno).
-const PUBLIC_PATHS = ["/login", "/landing", "/privacy", "/privary", "/terms-of-use", "/entrar", "/portal"];
+const PUBLIC_PATHS = ["/login", "/landing", "/privacy", "/privary", "/terms-of-use", "/entrar", "/portal", "/acesso-bloqueado"];
 
 const redirectTo = (req: NextRequest, pathname: string) => {
   const url = req.nextUrl.clone();
