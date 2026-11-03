@@ -39,7 +39,11 @@ const listColumns = {
   enrollmentDate: enrollments.enrollmentDate,
   firstLessonDate: enrollments.firstLessonDate,
   createdAt: enrollments.createdAt,
-  total: enrollmentFinancials.totalPriceCents,
+  /** Valor a pagar (preço - desconto). */
+  total: enrollmentFinancials.dueCents,
+  price: enrollmentFinancials.totalPriceCents,
+  discount: enrollmentFinancials.discountCents,
+  discountReason: enrollments.discountReason,
   paid: enrollmentFinancials.paidCents,
   balance: enrollmentFinancials.balanceCents,
   paymentStatus: enrollmentFinancials.paymentStatus,
@@ -54,14 +58,16 @@ function baseList() {
     .innerJoin(enrollmentFinancials, eq(enrollmentFinancials.enrollmentId, enrollments.id));
 }
 
-export type PaymentStatusFilter = "sem_pagamento" | "parcial" | "pago";
+/** "em_divida" = sem pagamento ou parcial (ainda falta receber). */
+export type PaymentStatusFilter = "sem_pagamento" | "parcial" | "pago" | "em_divida";
 
 export async function listEnrollments(
   ctx: Ctx,
   { q = "", paymentStatus, page = 1 }: { q?: string; paymentStatus?: PaymentStatusFilter; page?: number },
 ) {
   const conds: SQL[] = [inSchool(ctx)!];
-  if (paymentStatus) conds.push(eq(enrollmentFinancials.paymentStatus, paymentStatus));
+  if (paymentStatus === "em_divida") conds.push(ne(enrollmentFinancials.paymentStatus, "pago"), eq(enrollments.studentStatus, "ativo"));
+  else if (paymentStatus) conds.push(eq(enrollmentFinancials.paymentStatus, paymentStatus));
   if (q.trim()) {
     const term = `%${q.trim().replace(/[%_]/g, "\\$&")}%`;
     conds.push(or(ilike(students.fullName, term), ilike(students.idNumber, term), ilike(categories.code, term))!);
@@ -140,7 +146,9 @@ export type NewEnrollmentInput = {
   inatroStatus: InatroStatus;
   inatroProcessNumber: string | null;
   inatroNote: string | null;
-  firstPayment: { amountCents: number; method: PaymentMethod; reference: string | null } | null;
+  discountCents: number;
+  discountReason: string | null;
+  firstPayment: { amountCents: number; method: PaymentMethod; reference: string } | null;
 };
 
 /** Nova inscrição - UMA transação: aluno + inscrição + pagamento opcional + histórico. */
@@ -168,6 +176,10 @@ export async function createEnrollment(ctx: Ctx, input: NewEnrollmentInput) {
       .where(and(eq(categories.id, input.categoryId), eq(categories.schoolId, ctx.schoolId), eq(categories.active, true)))
       .limit(1);
     if (!category) throw new BusinessError("Categoria inválida ou inativa.", "categoryId");
+    if (input.discountCents > category.priceCents) {
+      throw new BusinessError("O desconto não pode ser maior que o preço da categoria.", "discount");
+    }
+    const dueCents = category.priceCents - input.discountCents;
 
     const [created] = await tx
       .insert(enrollments)
@@ -176,6 +188,8 @@ export async function createEnrollment(ctx: Ctx, input: NewEnrollmentInput) {
         studentId,
         categoryId: category.id,
         totalPriceCents: category.priceCents, // preço congelado
+        discountCents: input.discountCents,
+        discountReason: input.discountCents > 0 ? input.discountReason : null,
         enrollmentDate: input.enrollmentDate,
         firstLessonDate: input.firstLessonDate,
         inatroStatus: input.inatroStatus,
@@ -190,13 +204,15 @@ export async function createEnrollment(ctx: Ctx, input: NewEnrollmentInput) {
       studentId,
       category: category.code,
       priceCents: category.priceCents,
+      discountCents: input.discountCents || undefined,
+      discountReason: input.discountCents > 0 ? (input.discountReason ?? undefined) : undefined,
       enrollmentDate: input.enrollmentDate,
       firstLessonDate: input.firstLessonDate,
       inatroStatus: input.inatroStatus,
     });
 
     if (input.firstPayment) {
-      const error = validateNewPayment(category.priceCents, 0, input.firstPayment.amountCents);
+      const error = validateNewPayment(dueCents, 0, input.firstPayment.amountCents);
       if (error) throw new BusinessError(error, "firstPayment");
       const [p] = await tx
         .insert(payments)
@@ -213,6 +229,7 @@ export async function createEnrollment(ctx: Ctx, input: NewEnrollmentInput) {
         enrollmentId: created.id,
         amountCents: input.firstPayment.amountCents,
         method: input.firstPayment.method,
+        reference: input.firstPayment.reference,
       });
     }
 
@@ -306,4 +323,78 @@ export async function updateStudentStatus(ctx: Ctx, enrollmentId: string, status
       .where(and(eq(enrollments.id, enrollmentId), eq(enrollments.schoolId, ctx.schoolId)));
     await logHistory(tx, ctx, "inscricao", enrollmentId, "alterou_estado_aluno", { from: current.status, to: status });
   });
+}
+
+/**
+ * Aplica ou altera o desconto de uma inscrição (gestor/admin). O valor a pagar
+ * nunca pode ficar abaixo do que já foi pago.
+ */
+export async function updateDiscount(
+  ctx: Ctx,
+  { enrollmentId, discountCents, reason }: { enrollmentId: string; discountCents: number; reason: string | null },
+) {
+  await db.transaction(async (tx) => {
+    const [current] = await tx
+      .select({ price: enrollments.totalPriceCents, discount: enrollments.discountCents, reason: enrollments.discountReason })
+      .from(enrollments)
+      .where(and(eq(enrollments.id, enrollmentId), inSchool(ctx)))
+      .for("update")
+      .limit(1);
+    if (!current) throw new BusinessError("Inscrição não encontrada.");
+    if (discountCents > current.price) {
+      throw new BusinessError("O desconto não pode ser maior que o preço da inscrição.", "discount");
+    }
+
+    const [{ paid }] = await tx
+      .select({ paid: sql<number>`coalesce(sum(${payments.amountCents}), 0)`.mapWith(Number) })
+      .from(payments)
+      .where(and(eq(payments.enrollmentId, enrollmentId), isNull(payments.voidedAt)));
+    if (current.price - discountCents < paid) {
+      throw new BusinessError("Com este desconto o valor a pagar fica abaixo do que o aluno já pagou.", "discount");
+    }
+    if (current.discount === discountCents && (current.reason ?? null) === reason) return;
+
+    await tx
+      .update(enrollments)
+      .set({ discountCents, discountReason: discountCents > 0 ? reason : null, updatedAt: new Date() })
+      .where(and(eq(enrollments.id, enrollmentId), eq(enrollments.schoolId, ctx.schoolId)));
+    await logHistory(tx, ctx, "inscricao", enrollmentId, "alterou_desconto", {
+      from: current.discount,
+      to: discountCents,
+      reason: reason ?? undefined,
+    });
+  });
+}
+
+/** Notificação: alunos ainda não registados no INATRO (não registado ou pendente), mais antigos primeiro. */
+export async function getInatroNotice(ctx: Pick<Ctx, "schoolId">, limit = 6) {
+  const where = and(
+    eq(enrollments.schoolId, ctx.schoolId),
+    isNull(enrollments.deletedAt),
+    isNull(students.deletedAt),
+    ne(enrollments.inatroStatus, "registado"),
+    ne(enrollments.studentStatus, "desistiu"),
+  );
+  const [{ total }] = await db
+    .select({ total: count() })
+    .from(enrollments)
+    .innerJoin(students, eq(students.id, enrollments.studentId))
+    .where(where);
+  const rows = total
+    ? await db
+        .select({
+          id: enrollments.id,
+          student: students.fullName,
+          category: categories.name,
+          inatroStatus: enrollments.inatroStatus,
+          enrollmentDate: enrollments.enrollmentDate,
+        })
+        .from(enrollments)
+        .innerJoin(students, eq(students.id, enrollments.studentId))
+        .innerJoin(categories, eq(categories.id, enrollments.categoryId))
+        .where(where)
+        .orderBy(asc(enrollments.enrollmentDate), asc(enrollments.createdAt))
+        .limit(limit)
+    : [];
+  return { total, rows };
 }

@@ -1,12 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
-import { IconBell, IconMenu, IconSearch } from "@/components/ui/icons";
+import { IconMenu, IconSearch } from "@/components/ui/icons";
 import { ExamReadyPopup, type ExamNotice } from "./exam-ready-popup";
 import { Logo } from "./logo";
+import { NotificationsMenu, type InatroNotice } from "./notifications-menu";
 import { pageTitles, type ShellUser } from "./nav-items";
 import { Sidebar } from "./sidebar";
 
@@ -23,11 +23,13 @@ export function AppShell({
   children,
   user,
   pending,
+  inatroNotice,
   examNotice,
 }: {
   children: ReactNode;
   user: ShellUser;
   pending: number;
+  inatroNotice: InatroNotice;
   examNotice: ExamNotice;
 }) {
   const pathname = usePathname();
@@ -88,17 +90,7 @@ export function AppShell({
                   <IconSearch size={16} />
                 </button>
               </form> : null}
-              {!user.superAdmin ? <Link
-                href="/pendencias"
-                className="relative flex h-10 w-10 items-center justify-center rounded-full bg-night-700 text-ink shadow-raised transition hover:bg-night-600"
-                aria-label={`${pending} pendências no INATRO`}
-                title={`${pending} pendências no INATRO`}
-              >
-                <IconBell size={18} />
-                {pending > 0 ? (
-                  <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-brand ring-2 ring-night-700" />
-                ) : null}
-              </Link> : null}
+              {!user.superAdmin ? <NotificationsMenu inatro={inatroNotice} exam={examNotice} /> : null}
             </div>
           </header>
 

@@ -17,7 +17,7 @@ export async function recordPayment(
   return db.transaction(async (tx) => {
     // Bloqueia a inscrição para evitar dois pagamentos em simultâneo ultrapassarem o total
     const [enr] = await tx
-      .select({ id: enrollments.id, total: enrollments.totalPriceCents })
+      .select({ id: enrollments.id, total: sql<number>`${enrollments.totalPriceCents} - ${enrollments.discountCents}`.mapWith(Number) })
       .from(enrollments)
       .where(and(eq(enrollments.id, data.enrollmentId), eq(enrollments.schoolId, ctx.schoolId), isNull(enrollments.deletedAt)))
       .for("update")
@@ -154,4 +154,24 @@ export async function listPayments(
     pages: Math.max(1, Math.ceil(summary.total / PAGE_SIZE)),
     rows,
   };
+}
+
+/** Todos os pagamentos do aluno (todas as inscrições), para a ficha do aluno. */
+export async function listStudentPayments(ctx: Ctx, studentId: string) {
+  return db
+    .select({
+      id: payments.id,
+      enrollmentId: payments.enrollmentId,
+      category: categories.name,
+      amountCents: payments.amountCents,
+      method: payments.method,
+      reference: payments.reference,
+      paidAt: payments.paidAt,
+      voidedAt: payments.voidedAt,
+    })
+    .from(payments)
+    .innerJoin(enrollments, eq(enrollments.id, payments.enrollmentId))
+    .innerJoin(categories, eq(categories.id, enrollments.categoryId))
+    .where(and(eq(payments.schoolId, ctx.schoolId), eq(enrollments.studentId, studentId), isNull(enrollments.deletedAt)))
+    .orderBy(desc(payments.paidAt));
 }

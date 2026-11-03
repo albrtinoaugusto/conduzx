@@ -129,6 +129,9 @@ export const enrollments = pgTable(
       .notNull()
       .references(() => categories.id),
     totalPriceCents: money("preco_total_centavos").notNull(),
+    /** Desconto (promoção). Valor a pagar = totalPriceCents - discountCents. */
+    discountCents: money("desconto_centavos").notNull().default(0),
+    discountReason: text("desconto_motivo"),
     studentStatus: studentStatus("estado_aluno").notNull().default("ativo"),
     inatroStatus: inatroStatus("estado_inatro")
       .notNull()
@@ -150,6 +153,7 @@ export const enrollments = pgTable(
   },
   (t) => [
     check("inscricoes_preco_total_check", sql`${t.totalPriceCents} >= 0`),
+    check("inscricoes_desconto_check", sql`${t.discountCents} >= 0 AND ${t.discountCents} <= ${t.totalPriceCents}`),
     index("inscricoes_pendentes_idx")
       .on(t.schoolId, t.inatroStatus)
       .where(
@@ -283,7 +287,7 @@ export const studentLoginAttempts = pgTable("tentativas_login_aluno", {
   updatedAt: tz("atualizado_em").notNull().defaultNow(),
 });
 
-/** View criada na migração 0001 (cópia de schema.sql). `.existing()` = o drizzle-kit não a gere. */
+/** View criada na migração 0001 e refeita na 0005 (cópia de schema.sql). `.existing()` = o drizzle-kit não a gere. */
 export const enrollmentFinancials = pgView("inscricoes_financeiro", {
   enrollmentId: uuid("inscricao_id").notNull(),
   schoolId: uuid("escola_id").notNull(),
@@ -294,6 +298,9 @@ export const enrollmentFinancials = pgView("inscricoes_financeiro", {
   paymentStatus: text("situacao_pagamento")
     .$type<"sem_pagamento" | "parcial" | "pago">()
     .notNull(),
+  discountCents: money("desconto_centavos").notNull(),
+  /** Preço menos desconto: é sobre este valor que se calculam saldo e percentagem. */
+  dueCents: money("valor_a_pagar_centavos").notNull(),
 }).existing();
 
 export type UserRole = (typeof userRole.enumValues)[number];

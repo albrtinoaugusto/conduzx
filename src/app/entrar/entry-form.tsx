@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { DateInput } from "@/components/forms/date-input";
 import { ActionForm, FormAlert, FormInput, FormSelect, SubmitButton } from "@/components/forms/form";
 import { IconArrowRight, IconShield, IconUsers } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
@@ -55,7 +56,7 @@ export function EntryForm({ schools }: { schools: Array<{ id: string; name: stri
               ))}
             </FormSelect>
             <FormInput name="identifier" label="Número de BI ou telefone" autoComplete="username" placeholder="Ex.: 84 000 0000" />
-            <FormInput name="birthDate" type="date" label="Data de nascimento" autoComplete="bday" />
+            <DateInput name="birthDate" label="Data de nascimento" autoComplete="bday" />
             <SubmitButton size="lg" className="mt-1 w-full" icon={<IconArrowRight size={18} />} pendingLabel="A entrar…">
               Entrar
             </SubmitButton>

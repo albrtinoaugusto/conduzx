@@ -112,7 +112,10 @@ export async function getStudent(ctx: Ctx, id: string) {
       inatroStatus: enrollments.inatroStatus,
       inatroProcessNumber: enrollments.inatroProcessNumber,
       enrollmentDate: enrollments.enrollmentDate,
-      total: enrollmentFinancials.totalPriceCents,
+      firstLessonDate: enrollments.firstLessonDate,
+      total: enrollmentFinancials.dueCents,
+      price: enrollmentFinancials.totalPriceCents,
+      discount: enrollmentFinancials.discountCents,
       paid: enrollmentFinancials.paidCents,
       paymentStatus: enrollmentFinancials.paymentStatus,
     })

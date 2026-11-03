@@ -18,6 +18,7 @@ export async function getDashboard(ctx: Ctx) {
     pending: Num;
     pending_today: Num;
     open_balance: Num;
+    open_count: Num;
     total_active: Num;
     paid_active: Num;
     total_enrollments: Num;
@@ -41,7 +42,9 @@ export async function getDashboard(ctx: Ctx) {
         where escola_id = ${e} and eliminado_em is null and estado_inatro = 'pendente' and criado_em >= current_date) as pending_today,
       (select coalesce(sum(f.saldo_centavos),0) from inscricoes_financeiro f join inscricoes i on i.id = f.inscricao_id
         where f.escola_id = ${e} and i.estado_aluno = 'ativo') as open_balance,
-      (select coalesce(sum(f.preco_total_centavos),0) from inscricoes_financeiro f join inscricoes i on i.id = f.inscricao_id
+      (select count(*) from inscricoes_financeiro f join inscricoes i on i.id = f.inscricao_id
+        where f.escola_id = ${e} and i.estado_aluno = 'ativo' and f.saldo_centavos > 0) as open_count,
+      (select coalesce(sum(f.valor_a_pagar_centavos),0) from inscricoes_financeiro f join inscricoes i on i.id = f.inscricao_id
         where f.escola_id = ${e} and i.estado_aluno <> 'desistiu') as total_active,
       (select coalesce(sum(f.pago_centavos),0) from inscricoes_financeiro f join inscricoes i on i.id = f.inscricao_id
         where f.escola_id = ${e} and i.estado_aluno <> 'desistiu') as paid_active,
@@ -67,7 +70,7 @@ export async function getDashboard(ctx: Ctx) {
   `);
 
   const byCategory = await db.execute<{ name: string; students: Num; total: Num; paid: Num }>(sql`
-    select c.nome as name, count(*) as students, sum(f.preco_total_centavos) as total, sum(f.pago_centavos) as paid
+    select c.nome as name, count(*) as students, sum(f.valor_a_pagar_centavos) as total, sum(f.pago_centavos) as paid
     from inscricoes i
     join categorias c on c.id = i.categoria_id
     join inscricoes_financeiro f on f.inscricao_id = i.id
@@ -87,6 +90,7 @@ export async function getDashboard(ctx: Ctx) {
     pending: n(k.pending),
     pendingToday: n(k.pending_today),
     openBalance: n(k.open_balance),
+    openCount: n(k.open_count),
     // Chaves = valores de `situacao_pagamento` na BD
     statusCounts: {
       paid: byStatus.pago ?? 0,

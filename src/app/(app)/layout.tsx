@@ -1,9 +1,7 @@
-import { and, count, eq, isNull, ne } from "drizzle-orm";
 import { AppShell } from "@/components/layout/app-shell";
 import { requireContext } from "@/server/auth/session";
-import { db } from "@/server/db";
-import { enrollments } from "@/server/db/schema";
 import { can } from "@/server/domain/permissions";
+import { getInatroNotice } from "@/server/services/enrollments";
 import { getExamNotice } from "@/server/services/theory-exam";
 
 export const dynamic = "force-dynamic";
@@ -12,18 +10,9 @@ export default async function AppLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const ctx = await requireContext();
-  const [{ pending }] = ctx.schoolId ? await db
-    .select({ pending: count() })
-    .from(enrollments)
-    .where(
-      and(
-        eq(enrollments.schoolId, ctx.schoolId),
-        isNull(enrollments.deletedAt),
-        eq(enrollments.inatroStatus, "pendente"),
-        ne(enrollments.studentStatus, "desistiu"),
-      ),
-    ) : [{ pending: 0 }];
-  const examNotice = ctx.schoolId ? await getExamNotice(ctx) : { total: 0, rows: [] };
+  const [inatroNotice, examNotice] = ctx.schoolId
+    ? await Promise.all([getInatroNotice(ctx), getExamNotice(ctx)])
+    : [{ total: 0, rows: [] }, { total: 0, rows: [] }];
 
   return (
     <AppShell
@@ -35,7 +24,8 @@ export default async function AppLayout({
         admin: ctx.role === "admin",
         superAdmin: ctx.role === "super_admin",
       }}
-      pending={pending}
+      pending={inatroNotice.total}
+      inatroNotice={inatroNotice}
       examNotice={examNotice}
     >
       {children}

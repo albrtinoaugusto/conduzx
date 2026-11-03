@@ -3,6 +3,7 @@ import type { UserRole } from "@/server/db/schema";
 export type Permission =
   | "operate" // alunos, inscrições, pagamentos, estado INATRO
   | "void_payment"
+  | "edit_discount" // alterar o desconto depois de criada a inscrição
   | "manage_categories"
   | "manage_users"
   | "view_history";
@@ -10,6 +11,7 @@ export type Permission =
 const rules: Record<Permission, UserRole[]> = {
   operate: ["atendente", "gestor", "admin"],
   void_payment: ["gestor", "admin"],
+  edit_discount: ["gestor", "admin"],
   manage_categories: ["admin"],
   manage_users: ["admin"],
   view_history: ["gestor", "admin"],

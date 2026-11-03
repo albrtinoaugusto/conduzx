@@ -10,15 +10,23 @@ import {
   PaymentBadge,
   InatroBadge,
   Progress,
+  Table,
+  TBody,
+  Td,
+  Th,
+  THead,
+  Tr,
 } from "@/components/ui";
-import { IconArrowRight, IconPlus } from "@/components/ui/icons";
+import { Badge } from "@/components/ui";
+import { IconArrowRight } from "@/components/ui/icons";
 import { formatMoneyMzn } from "@/lib/format-money";
-import { formatDate, initials } from "@/lib/labels";
+import { formatDate, formatDateTime, initials, methodLabel } from "@/lib/labels";
 import { requireContext } from "@/server/auth/session";
 import { can } from "@/server/domain/permissions";
 import { summarizeFinancials } from "@/server/domain/finance";
 import { getStudent } from "@/server/services/students";
 import { listDocuments } from "@/server/services/documents";
+import { listStudentPayments } from "@/server/services/payments";
 import { listHistory } from "@/server/services/history";
 import { getPracticeAccess } from "@/server/services/practice-access";
 import { StudentDocuments } from "./documents";
@@ -29,7 +37,7 @@ export default async function StudentPage({
   searchParams,
 }: {
   params: { id: string };
-  searchParams: { created?: string; updated?: string };
+  searchParams: { created?: string; updated?: string; docs?: string };
 }) {
   const ctx = await requireContext();
   if (!/^[0-9a-f-]{36}$/i.test(params.id)) notFound();
@@ -39,6 +47,7 @@ export default async function StudentPage({
 
   const documents = await listDocuments(ctx, student.id);
   const practice = await getPracticeAccess(ctx, student.id);
+  const studentPayments = await listStudentPayments(ctx, student.id);
   const history = can(ctx.role, "view_history")
     ? await listHistory(ctx, {
         entityIds: [student.id, ...enrollments.map((i) => i.id), ...documents.map((d) => d.id)],
@@ -57,7 +66,10 @@ export default async function StudentPage({
 
   return (
     <>
-      {searchParams.created ? <Notice>Aluno registado com sucesso. Pode carregar já a foto tipo passe e o BI.</Notice> : null}
+      {searchParams.created ? <Notice>Aluno registado com sucesso.</Notice> : null}
+      {searchParams.docs ? (
+        <Notice tone="brand">Os dados foram guardados, mas não foi possível carregar a foto ou o BI. Tente carregar novamente em Documentos.</Notice>
+      ) : null}
       {searchParams.updated ? <Notice>Dados do aluno atualizados.</Notice> : null}
 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
@@ -80,14 +92,13 @@ export default async function StudentPage({
                 </div>
               ))}
             </dl>
-            <div className="mt-5 flex flex-wrap gap-2">
-              <ButtonLink href={`/alunos/${student.id}/editar`} variant="secondary" size="sm">
-                Editar dados
-              </ButtonLink>
-              <ButtonLink href={`/inscricoes/nova?student=${student.id}`} size="sm" icon={<IconPlus size={14} />}>
-                Nova inscrição
-              </ButtonLink>
-            </div>
+            {can(ctx.role, "operate") ? (
+              <div className="mt-5 flex flex-wrap gap-2">
+                <ButtonLink href={`/alunos/${student.id}/editar`} variant="secondary" size="sm">
+                  Editar dados
+                </ButtonLink>
+              </div>
+            ) : null}
           </Card>
 
           <Card>
@@ -150,6 +161,47 @@ export default async function StudentPage({
                   );
                 })}
               </ul>
+            )}
+          </Card>
+
+          <Card>
+            <CardHeader title="Pagamentos" description="Todos os pagamentos do aluno, com a referência / nº do recibo" />
+            {studentPayments.length === 0 ? (
+              <p className="rounded-xl bg-night-700/50 p-4 text-sm text-muted">Ainda não há pagamentos.</p>
+            ) : (
+              <Table>
+                <THead>
+                  <tr>
+                    <Th>Data</Th>
+                    <Th>Referência / recibo</Th>
+                    <Th>Método</Th>
+                    <Th>Inscrição</Th>
+                    <Th align="right">Valor</Th>
+                  </tr>
+                </THead>
+                <TBody>
+                  {studentPayments.map((p) => (
+                    <Tr key={p.id} className={p.voidedAt ? "opacity-70" : undefined}>
+                      <Td className="text-muted">{formatDateTime(p.paidAt)}</Td>
+                      <Td className="font-semibold">{p.reference || <span className="font-normal text-subtle">sem referência</span>}</Td>
+                      <Td className="text-muted">{methodLabel[p.method]}</Td>
+                      <Td>
+                        <Link href={`/inscricoes/${p.enrollmentId}`} className="text-muted hover:text-brand">
+                          {p.category}
+                        </Link>
+                      </Td>
+                      <Td align="right" className={p.voidedAt ? "text-subtle line-through" : "font-semibold"}>
+                        {formatMoneyMzn(p.amountCents)}
+                        {p.voidedAt ? (
+                          <span className="ml-2 inline-block">
+                            <Badge tone="danger">Anulado</Badge>
+                          </span>
+                        ) : null}
+                      </Td>
+                    </Tr>
+                  ))}
+                </TBody>
+              </Table>
             )}
           </Card>
 

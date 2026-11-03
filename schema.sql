@@ -70,6 +70,10 @@ CREATE TABLE inscricoes (
 
   -- preço congelado no momento da inscrição (mudar o preço depois não altera inscrições antigas)
   preco_total_centavos      bigint NOT NULL CHECK (preco_total_centavos >= 0),
+  -- desconto (ex.: promoção); valor a pagar = preco_total_centavos - desconto_centavos
+  desconto_centavos         bigint NOT NULL DEFAULT 0,
+  desconto_motivo           text,
+  CONSTRAINT inscricoes_desconto_check CHECK (desconto_centavos >= 0 AND desconto_centavos <= preco_total_centavos),
 
   -- eixo 1: situação do aluno
   estado_aluno              estado_aluno NOT NULL DEFAULT 'ativo',
@@ -215,19 +219,22 @@ SELECT
   i.escola_id,
   i.preco_total_centavos,
   COALESCE(SUM(p.valor_centavos) FILTER (WHERE p.anulado_em IS NULL), 0) AS pago_centavos,
-  i.preco_total_centavos
+  (i.preco_total_centavos - i.desconto_centavos)
     - COALESCE(SUM(p.valor_centavos) FILTER (WHERE p.anulado_em IS NULL), 0) AS saldo_centavos,
-  CASE WHEN i.preco_total_centavos = 0 THEN 100
+  CASE WHEN i.preco_total_centavos - i.desconto_centavos = 0 THEN 100
        ELSE ROUND(100.0 * COALESCE(SUM(p.valor_centavos) FILTER (WHERE p.anulado_em IS NULL), 0)
-                  / i.preco_total_centavos, 1)
+                  / (i.preco_total_centavos - i.desconto_centavos), 1)
   END AS percentagem_paga,
   CASE
+    WHEN i.preco_total_centavos - i.desconto_centavos = 0 THEN 'pago'
     WHEN COALESCE(SUM(p.valor_centavos) FILTER (WHERE p.anulado_em IS NULL), 0) = 0
       THEN 'sem_pagamento'
-    WHEN COALESCE(SUM(p.valor_centavos) FILTER (WHERE p.anulado_em IS NULL), 0) < i.preco_total_centavos
+    WHEN COALESCE(SUM(p.valor_centavos) FILTER (WHERE p.anulado_em IS NULL), 0) < i.preco_total_centavos - i.desconto_centavos
       THEN 'parcial'
     ELSE 'pago'
-  END AS situacao_pagamento
+  END AS situacao_pagamento,
+  i.desconto_centavos,
+  i.preco_total_centavos - i.desconto_centavos AS valor_a_pagar_centavos
 FROM inscricoes i
 LEFT JOIN pagamentos p ON p.inscricao_id = i.id
 WHERE i.eliminado_em IS NULL

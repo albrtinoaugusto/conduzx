@@ -105,7 +105,9 @@ export function listMyEnrollments(student: StudentCtx) {
       inatroProcessNumber: enrollments.inatroProcessNumber,
       enrollmentDate: enrollments.enrollmentDate,
       firstLessonDate: enrollments.firstLessonDate,
-      total: enrollmentFinancials.totalPriceCents,
+      total: enrollmentFinancials.dueCents,
+      price: enrollmentFinancials.totalPriceCents,
+      discount: enrollmentFinancials.discountCents,
       paid: enrollmentFinancials.paidCents,
       paymentStatus: enrollmentFinancials.paymentStatus,
     })

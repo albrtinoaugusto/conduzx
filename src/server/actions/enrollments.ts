@@ -10,6 +10,7 @@ import {
   updateInatro,
   createEnrollment,
   updateEnrollmentDates,
+  updateDiscount,
 } from "@/server/services/enrollments";
 import { acknowledgeExamNotice } from "@/server/services/theory-exam";
 import { voidPayment, recordPayment } from "@/server/services/payments";
@@ -23,7 +24,9 @@ import {
   enrollmentSchema,
   enrollmentDatesSchema,
   paymentSchema,
+  discountSchema,
 } from "@/server/validation/schemas";
+import { readStudentFiles, saveStudentFiles } from "./student-files";
 import { errorToState, invalid, success } from "./util";
 
 function revalidateAll(enrollmentId?: string) {
@@ -36,15 +39,18 @@ export async function createEnrollmentAction(_: FormState, fd: FormData): Promis
   const obj = formToObject(fd);
   const r = enrollmentSchema.safeParse(obj);
   const studentResult = obj.studentMode === "novo" ? studentSchema.safeParse(obj) : null;
+  const docs = await readStudentFiles(fd);
 
   const fields = {
     ...(r.success ? {} : zodErrors(r.error)),
     ...(studentResult && !studentResult.success ? zodErrors(studentResult.error) : {}),
+    ...docs.fields,
   };
-  if (!r.success || (studentResult && !studentResult.success)) return invalid(fields);
+  if (!r.success || (studentResult && !studentResult.success) || Object.keys(docs.fields).length) return invalid(fields);
 
   const d = r.data;
   let enrollmentId: string;
+  let studentId: string;
   try {
     const res = await createEnrollment(ctx, {
       student: studentResult?.success ? { newStudent: studentResult.data } : { existingId: d.studentId! },
@@ -54,16 +60,20 @@ export async function createEnrollmentAction(_: FormState, fd: FormData): Promis
       inatroStatus: d.inatroStatus,
       inatroProcessNumber: d.inatroProcessNumber,
       inatroNote: d.inatroNote,
+      discountCents: d.discount ?? 0,
+      discountReason: d.discountReason,
       firstPayment: d.firstPayment
-        ? { amountCents: d.firstPayment, method: d.method, reference: d.reference }
+        ? { amountCents: d.firstPayment, method: d.method, reference: d.reference! }
         : null,
     });
     enrollmentId = res.enrollmentId;
+    studentId = res.studentId;
   } catch (e) {
     return errorToState(e);
   }
+  const docsOk = await saveStudentFiles(ctx, studentId, docs.files);
   revalidateAll();
-  redirect(`/inscricoes/${enrollmentId}?created=1`);
+  redirect(`/inscricoes/${enrollmentId}?created=1${docsOk ? "" : "&docs=falhou"}`);
 }
 
 export async function recordPaymentAction(_: FormState, fd: FormData): Promise<FormState> {
@@ -156,4 +166,21 @@ export async function updateStudentStatusAction(_: FormState, fd: FormData): Pro
   }
   revalidateAll(r.data.enrollmentId);
   return success("Estado do aluno atualizado.");
+}
+
+export async function updateDiscountAction(_: FormState, fd: FormData): Promise<FormState> {
+  const ctx = await requireContext("edit_discount");
+  const r = discountSchema.safeParse(formToObject(fd));
+  if (!r.success) return invalid(zodErrors(r.error));
+  try {
+    await updateDiscount(ctx, {
+      enrollmentId: r.data.enrollmentId,
+      discountCents: r.data.discount ?? 0,
+      reason: r.data.discountReason,
+    });
+  } catch (e) {
+    return errorToState(e);
+  }
+  revalidateAll(r.data.enrollmentId);
+  return success(r.data.discount ? "Desconto aplicado." : "Desconto removido.");
 }

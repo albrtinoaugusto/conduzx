@@ -96,16 +96,21 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
           footer={today}
         />
         <Card className="flex flex-col justify-between gap-3 p-4 sm:col-span-2 xl:col-span-4 xl:flex-row xl:items-center 2xl:col-span-1 2xl:flex-col 2xl:items-stretch">
-          <p className="font-display text-base font-bold text-ink">Saldo por receber</p>
-          <div className="flex items-center gap-3">
+          <div>
+            <p className="font-display text-base font-bold text-ink">Falta receber</p>
+            <p className="text-[11px] text-subtle">Valor a pagar (preço - desconto) menos o que já foi pago, dos alunos ativos.</p>
+          </div>
+          <Link href="/inscricoes?paymentStatus=em_divida" className="group flex items-center gap-3">
             <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-success text-night-950 shadow-raised">
               <IconArrowUp size={20} strokeWidth={3} />
             </span>
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-subtle">Em aberto (alunos ativos)</p>
               <p className="font-display text-xl font-bold text-ink">{formatMoneyMzn(p.openBalance)}</p>
+              <p className="text-[11px] font-semibold text-brand group-hover:underline">
+                {p.openCount === 0 ? "Ninguém em dívida" : `${p.openCount} inscrição(ões) em dívida · ver quem deve`}
+              </p>
             </div>
-          </div>
+          </Link>
           <div className="flex items-end justify-between gap-2">
             <span className="text-xs font-semibold text-muted">Recebimentos · 7 dias</span>
             <Sparkline points={p.receipts7Days} width={110} height={36} />

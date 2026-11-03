@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { DateInput } from "@/components/forms/date-input";
 import {
   ActionForm,
   FormAlert,
@@ -19,6 +20,7 @@ import { methodLabel } from "@/lib/labels";
 import { searchStudentsAction } from "@/server/actions/students";
 import { createEnrollmentAction } from "@/server/actions/enrollments";
 import { THEORY_EXAM_DAYS, todayInMaputo } from "@/server/domain/theory-exam";
+import { DocumentPickers } from "../../alunos/document-pickers";
 import { StudentFields } from "../../alunos/student-fields";
 
 type Category = { id: string; name: string; priceCents: number };
@@ -120,12 +122,15 @@ export function NewEnrollmentForm({ categories, initialStudent }: { categories: 
   const [mode, setMode] = useState<"existente" | "novo">(initialStudent ? "existente" : "novo");
   const [categoryId, setCategoryId] = useState(categories[0]?.id ?? "");
   const [amount, setAmount] = useState("");
+  const [discount, setDiscount] = useState("");
   const [inatro, setInatro] = useState<"nao_registado" | "pendente" | "registado">("nao_registado");
   const today = todayInMaputo();
 
   const category = categories.find((c) => c.id === categoryId);
   const amountCents = amount ? parseMeticais(amount) : 0;
   const price = category?.priceCents ?? 0;
+  const discountCents = discount ? parseMeticais(discount) : 0;
+  const due = Math.max(0, price - (discountCents ?? 0));
 
   return (
     <ActionForm action={createEnrollmentAction} className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
@@ -156,7 +161,18 @@ export function NewEnrollmentForm({ categories, initialStudent }: { categories: 
               </button>
             ))}
           </div>
-          {mode === "novo" ? <StudentFields /> : <StudentPicker initial={initialStudent} />}
+          {mode === "novo" ? (
+            <div className="flex flex-col gap-5">
+              <StudentFields />
+              <div>
+                <p className="mb-3 text-sm font-semibold text-ink">Foto tipo passe e BI</p>
+                <DocumentPickers />
+                <p className="mt-2 text-xs text-subtle">Opcional. Se o aluno ainda não trouxe, pode carregar depois na ficha do aluno.</p>
+              </div>
+            </div>
+          ) : (
+            <StudentPicker initial={initialStudent} />
+          )}
         </Step>
 
         <Step n={2} title="Categoria de carta">
@@ -170,18 +186,29 @@ export function NewEnrollmentForm({ categories, initialStudent }: { categories: 
           <p className="mt-2 text-xs text-subtle">O preço fica guardado nesta inscrição, mesmo que a tabela de preços mude depois.</p>
           <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <FormInput
+              name="discount"
+              label="Desconto (MT)"
+              inputMode="decimal"
+              placeholder="Ex.: 1.000"
+              value={discount}
+              onChange={(e) => setDiscount(e.target.value)}
+              hint="Opcional - ex.: promoção da escola."
+            />
+            {discountCents ? (
+              <FormInput name="discountReason" label="Motivo do desconto *" placeholder="Ex.: promoção de Dezembro" />
+            ) : null}
+          </div>
+          <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <DateInput
               name="enrollmentDate"
-              type="date"
               label="Data de inscrição *"
               defaultValue={today}
-              max={today}
-              hint="Se o aluno se matriculou antes, indique a data real."
+              hint="dd/mm/aaaa · se o aluno se matriculou antes, indique a data real."
             />
-            <FormInput
+            <DateInput
               name="firstLessonDate"
-              type="date"
               label="Primeira aula"
-              hint={`Inicia a contagem de ${THEORY_EXAM_DAYS} dias para o exame teórico.`}
+              hint={`dd/mm/aaaa · inicia a contagem de ${THEORY_EXAM_DAYS} dias para o exame teórico.`}
             />
           </div>
         </Step>
@@ -204,14 +231,14 @@ export function NewEnrollmentForm({ categories, initialStudent }: { categories: 
                 </option>
               ))}
             </FormSelect>
-            <FormInput name="reference" label="Referência / recibo" placeholder="opcional" />
+            <FormInput name="reference" label={amount ? "Referência / recibo *" : "Referência / recibo"} placeholder="Ex.: recibo nº 0231" hint="Obrigatório quando há pagamento." />
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             {[30, 50, 100].map((p) => (
               <button
                 key={p}
                 type="button"
-                onClick={() => setAmount(String(Math.floor((price * p) / 100) / 100).replace(".", ","))}
+                onClick={() => setAmount(String(Math.floor((due * p) / 100) / 100).replace(".", ","))}
                 className="rounded-full bg-night-700 px-3 py-1.5 text-xs font-semibold text-muted shadow-raised hover:text-ink"
               >
                 {p === 100 ? "Pagou tudo" : `${p}%`}
@@ -268,6 +295,20 @@ export function NewEnrollmentForm({ categories, initialStudent }: { categories: 
               <dt className="text-muted">Preço total</dt>
               <dd className="font-semibold text-ink">{formatMoneyMzn(price)}</dd>
             </div>
+            {discountCents ? (
+              <>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-muted">Desconto</dt>
+                  <dd className="font-semibold text-warning">- {formatMoneyMzn(discountCents)}</dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-muted">Valor a pagar</dt>
+                  <dd className="font-semibold text-ink">{formatMoneyMzn(due)}</dd>
+                </div>
+              </>
+            ) : discountCents === null ? (
+              <p className="rounded-xl bg-danger/10 px-3 py-2 text-xs font-semibold text-danger">Desconto inválido.</p>
+            ) : null}
             <div className="flex justify-between gap-3">
               <dt className="text-muted">Pago agora</dt>
               <dd className={cn("font-semibold", amountCents === null ? "text-danger" : "text-success")}>
@@ -276,10 +317,12 @@ export function NewEnrollmentForm({ categories, initialStudent }: { categories: 
             </div>
             <div className="flex justify-between gap-3 border-t border-line pt-3">
               <dt className="font-semibold text-ink">Saldo em falta</dt>
-              <dd className="font-display text-xl font-bold text-brand">{formatMoneyMzn(Math.max(0, price - (amountCents ?? 0)))}</dd>
+              <dd className="font-display text-xl font-bold text-brand">{formatMoneyMzn(Math.max(0, due - (amountCents ?? 0)))}</dd>
             </div>
-            {amountCents && amountCents > price ? (
-              <p className="rounded-xl bg-danger/10 px-3 py-2 text-xs font-semibold text-danger">O valor é superior ao preço da categoria.</p>
+            {discountCents && discountCents > price ? (
+              <p className="rounded-xl bg-danger/10 px-3 py-2 text-xs font-semibold text-danger">O desconto é superior ao preço da categoria.</p>
+            ) : amountCents && amountCents > due ? (
+              <p className="rounded-xl bg-danger/10 px-3 py-2 text-xs font-semibold text-danger">O valor é superior ao valor a pagar.</p>
             ) : null}
           </dl>
           <div className="mt-6 flex flex-col gap-2">

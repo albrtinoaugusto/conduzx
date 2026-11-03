@@ -28,6 +28,7 @@ import { listHistory } from "@/server/services/history";
 import { getEnrollment } from "@/server/services/enrollments";
 import {
   EnrollmentDatesForm,
+  DiscountForm,
   VoidPayment,
   StudentStatusForm,
   InatroStatusForm,
@@ -39,7 +40,7 @@ export default async function EnrollmentPage({
   searchParams,
 }: {
   params: { id: string };
-  searchParams: { created?: string };
+  searchParams: { created?: string; docs?: string };
 }) {
   const ctx = await requireContext();
   if (!/^[0-9a-f-]{36}$/i.test(params.id)) notFound();
@@ -56,6 +57,9 @@ export default async function EnrollmentPage({
   return (
     <>
       {searchParams.created ? <Notice>Inscrição criada com sucesso.</Notice> : null}
+      {searchParams.docs ? (
+        <Notice tone="brand">A inscrição foi criada, mas não foi possível carregar a foto ou o BI. Carregue-os na ficha do aluno.</Notice>
+      ) : null}
 
       {/* Cabeçalho */}
       <Card className="mb-5 flex flex-col gap-5 lg:flex-row lg:items-center">
@@ -76,8 +80,13 @@ export default async function EnrollmentPage({
         </div>
         <dl className="grid shrink-0 grid-cols-3 gap-4 text-center lg:text-right">
           <div>
-            <dt className="text-[11px] font-semibold uppercase tracking-wider text-subtle">Total</dt>
+            <dt className="text-[11px] font-semibold uppercase tracking-wider text-subtle">{i.discount ? "A pagar" : "Total"}</dt>
             <dd className="font-display text-lg font-bold text-ink">{formatMoneyMzn(f.totalCents)}</dd>
+            {i.discount ? (
+              <dd className="text-[11px] text-subtle">
+                {formatMoneyMzn(i.price)} - {formatMoneyMzn(i.discount)} desc.
+              </dd>
+            ) : null}
           </div>
           <div>
             <dt className="text-[11px] font-semibold uppercase tracking-wider text-subtle">Pago</dt>
@@ -156,6 +165,30 @@ export default async function EnrollmentPage({
           <Card>
             <CardHeader title="Registar pagamento" description={`Em falta: ${formatMoneyMzn(f.balanceCents)}`} />
             <RecordPayment enrollmentId={i.id} balanceCents={f.balanceCents} />
+          </Card>
+          <Card>
+            <CardHeader
+              title="Preço e desconto"
+              description="Preço da categoria guardado no dia da inscrição"
+              action={can(ctx.role, "edit_discount") ? <DiscountForm enrollmentId={i.id} discountCents={i.discount} reason={i.discountReason} /> : undefined}
+            />
+            <dl className="flex flex-col gap-2 text-sm">
+              <div className="flex justify-between gap-3">
+                <dt className="text-muted">Preço</dt>
+                <dd className="font-semibold text-ink">{formatMoneyMzn(i.price)}</dd>
+              </div>
+              <div className="flex justify-between gap-3">
+                <dt className="text-muted">Desconto</dt>
+                <dd className="text-right font-semibold text-ink">
+                  {i.discount ? `- ${formatMoneyMzn(i.discount)}` : "Sem desconto"}
+                  {i.discountReason ? <span className="block text-[11px] font-normal text-subtle">{i.discountReason}</span> : null}
+                </dd>
+              </div>
+              <div className="flex justify-between gap-3 border-t border-line pt-2">
+                <dt className="font-semibold text-ink">Valor a pagar</dt>
+                <dd className="font-display font-bold text-brand">{formatMoneyMzn(f.totalCents)}</dd>
+              </div>
+            </dl>
           </Card>
           <Card>
             <CardHeader

@@ -48,6 +48,7 @@ const fullActions: Record<string, string> = {
   nova_tentativa_inatro: "registou nova tentativa no INATRO",
   alterou_estado_aluno: "alterou a situação do aluno",
   alterou_datas_inscricao: "alterou as datas da inscrição",
+  alterou_desconto: "alterou o desconto da inscrição",
   confirmou_aviso_exame: "confirmou o aviso do exame teórico",
   ativou_testes: "ativou o acesso aos testes",
   anulou_testes: "anulou o acesso aos testes",

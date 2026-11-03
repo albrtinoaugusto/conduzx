@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { DateInput } from "@/components/forms/date-input";
 import { ActionForm, FormAlert, FormInput, FormSelect, FormTextarea, SubmitButton } from "@/components/forms/form";
 import { ModalForm } from "@/components/forms/modal";
 import { IconCheck, IconClock, IconPlus } from "@/components/ui/icons";
@@ -12,8 +13,8 @@ import {
   updateInatroAction,
   recordPaymentAction,
   updateEnrollmentDatesAction,
+  updateDiscountAction,
 } from "@/server/actions/enrollments";
-import { todayInMaputo } from "@/server/domain/theory-exam";
 
 export function RecordPayment({ enrollmentId, balanceCents }: { enrollmentId: string; balanceCents: number }) {
   if (balanceCents <= 0) {
@@ -32,7 +33,7 @@ export function RecordPayment({ enrollmentId, balanceCents }: { enrollmentId: st
             </option>
           ))}
         </FormSelect>
-        <FormInput name="reference" label="Referência" placeholder="opcional" />
+        <FormInput name="reference" label="Referência / recibo *" placeholder="Ex.: recibo nº 0231" />
       </div>
       <SubmitButton icon={<IconPlus size={16} />} className="w-full">
         Registar pagamento
@@ -140,8 +141,8 @@ export function EnrollmentDatesForm({
     <ActionForm action={updateEnrollmentDatesAction} className="flex flex-col gap-4">
       <input type="hidden" name="enrollmentId" value={enrollmentId} />
       <FormAlert />
-      <FormInput name="enrollmentDate" type="date" label="Data de inscrição *" defaultValue={enrollmentDate} max={todayInMaputo()} />
-      <FormInput name="firstLessonDate" type="date" label="Primeira aula" defaultValue={firstLessonDate ?? ""} />
+      <DateInput name="enrollmentDate" label="Data de inscrição *" defaultValue={enrollmentDate} />
+      <DateInput name="firstLessonDate" label="Primeira aula" defaultValue={firstLessonDate} />
       <SubmitButton variant="secondary">Guardar datas</SubmitButton>
     </ActionForm>
   );
@@ -162,5 +163,39 @@ export function StudentStatusForm({ enrollmentId, status }: { enrollmentId: stri
         Guardar
       </SubmitButton>
     </ActionForm>
+  );
+}
+
+/** Desconto depois de criada a inscrição (gestor/admin). 0 ou vazio remove o desconto. */
+export function DiscountForm({
+  enrollmentId,
+  discountCents,
+  reason,
+}: {
+  enrollmentId: string;
+  discountCents: number;
+  reason: string | null;
+}) {
+  return (
+    <ModalForm
+      trigger={discountCents ? "Alterar desconto" : "Aplicar desconto"}
+      triggerVariant="secondary"
+      triggerSize="sm"
+      title="Desconto da inscrição"
+      description="O valor a pagar passa a ser o preço menos o desconto. Fica registado no histórico."
+      action={updateDiscountAction}
+      submitLabel="Guardar desconto"
+    >
+      <input type="hidden" name="enrollmentId" value={enrollmentId} />
+      <FormInput
+        name="discount"
+        label="Desconto (MT)"
+        inputMode="decimal"
+        defaultValue={discountCents ? String(discountCents / 100).replace(".", ",") : ""}
+        placeholder="Ex.: 1.000"
+        hint="Deixe vazio para remover o desconto."
+      />
+      <FormInput name="discountReason" label="Motivo" defaultValue={reason ?? ""} placeholder="Ex.: promoção de Dezembro" />
+    </ModalForm>
   );
 }

@@ -70,7 +70,7 @@ export function PracticeAccessPanel({ studentId, access, canVoid }: { studentId:
             </option>
           ))}
         </FormSelect>
-        <FormInput name="reference" label="Referência" placeholder="opcional" />
+        <FormInput name="reference" label="Referência / recibo *" placeholder="Ex.: recibo nº 0231" />
       </div>
     </ModalForm>
   );

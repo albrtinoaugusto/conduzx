@@ -20,7 +20,7 @@ import { requireContext } from "@/server/auth/session";
 import { summarizeFinancials } from "@/server/domain/finance";
 import { listEnrollments, type PaymentStatusFilter } from "@/server/services/enrollments";
 
-const PAYMENT_STATUSES: PaymentStatusFilter[] = ["sem_pagamento", "parcial", "pago"];
+const PAYMENT_STATUSES: PaymentStatusFilter[] = ["sem_pagamento", "parcial", "pago", "em_divida"];
 
 export default async function EnrollmentsPage({
   searchParams,
@@ -40,6 +40,7 @@ export default async function EnrollmentsPage({
     { label: "Sem pagamento", value: "sem_pagamento" },
     { label: "Parcial", value: "parcial" },
     { label: "Pago", value: "pago" },
+    { label: "Em dívida", value: "em_divida" },
   ].map((f) => ({ label: f.label, href: withQuery("/inscricoes", { q, paymentStatus: f.value }), active: paymentStatus === f.value }));
 
   return (

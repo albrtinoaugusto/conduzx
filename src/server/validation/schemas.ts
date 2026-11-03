@@ -32,19 +32,27 @@ const moneyField = (required = true) =>
 
 const uuid = z.string().uuid("Seleção inválida.");
 
+/** Referência / nº do recibo: obrigatória em todos os pagamentos. */
+const referenceField = z
+  .string({ required_error: "Indique a referência ou o nº do recibo." })
+  .trim()
+  .min(1, "Indique a referência ou o nº do recibo.")
+  .max(80, "Máximo de 80 caracteres.");
+
 const isRealDate = (v: string) => /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(`${v}T00:00:00Z`));
 
 /** Inscrição: a data real indicada pelo operador nunca é futura; a primeira aula pode ser. */
 const enrollmentDateFields = {
   enrollmentDate: z
     .string()
-    .refine(isRealDate, "Indique a data de inscrição.")
+    .min(1, "Indique a data de inscrição.")
+    .refine(isRealDate, "Data inválida. Use dd/mm/aaaa.")
     .refine((v) => v <= todayInMaputo(), "A data de inscrição não pode ser futura."),
   firstLessonDate: z
     .string()
     .optional()
     .transform((v) => (v ? v : null))
-    .refine((v) => v === null || isRealDate(v), "Data da primeira aula inválida."),
+    .refine((v) => v === null || isRealDate(v), "Data da primeira aula inválida. Use dd/mm/aaaa."),
 };
 
 function checkFirstLessonDate(v: { enrollmentDate: string; firstLessonDate: string | null }, c: z.RefinementCtx) {
@@ -65,7 +73,8 @@ export const studentSchema = z.object({
     .max(150, "Nome demasiado longo."),
   birthDate: z
     .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Indique a data de nascimento.")
+    .min(1, "Indique a data de nascimento.")
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Data de nascimento inválida. Use dd/mm/aaaa.")
     .refine((v) => {
       const d = new Date(`${v}T00:00:00Z`);
       return !Number.isNaN(d.getTime()) && d < new Date() && d.getUTCFullYear() > 1900;
@@ -93,12 +102,20 @@ export const enrollmentSchema = z
     inatroStatus: z.enum(inatroStatuses),
     inatroProcessNumber: optionalText(60),
     inatroNote: optionalText(500),
+    discount: moneyField(false),
+    discountReason: optionalText(200),
     firstPayment: moneyField(false),
     method: z.enum(methods).default("dinheiro"),
     reference: optionalText(80),
   })
   .superRefine((v, c) => {
     checkFirstLessonDate(v, c);
+    if (v.firstPayment && !v.reference) {
+      c.addIssue({ code: "custom", path: ["reference"], message: "Indique a referência ou o nº do recibo." });
+    }
+    if (v.discount && !v.discountReason) {
+      c.addIssue({ code: "custom", path: ["discountReason"], message: "Indique o motivo do desconto (ex.: promoção de Dezembro)." });
+    }
     if (v.studentMode === "existente" && !z.string().uuid().safeParse(v.studentId).success) {
       c.addIssue({ code: "custom", path: ["studentId"], message: "Escolha o aluno." });
     }
@@ -119,7 +136,7 @@ export const grantPracticeAccessSchema = z.object({
   studentId: uuid,
   amount: moneyField(true),
   method: z.enum(methods),
-  reference: optionalText(80),
+  reference: referenceField,
 });
 
 export const voidPracticeAccessSchema = z.object({
@@ -138,8 +155,20 @@ export const paymentSchema = z.object({
   enrollmentId: uuid,
   amount: moneyField(true),
   method: z.enum(methods),
-  reference: optionalText(80),
+  reference: referenceField,
 });
+
+export const discountSchema = z
+  .object({
+    enrollmentId: uuid,
+    discount: moneyField(false),
+    discountReason: optionalText(200),
+  })
+  .superRefine((v, c) => {
+    if (v.discount && !v.discountReason) {
+      c.addIssue({ code: "custom", path: ["discountReason"], message: "Indique o motivo do desconto." });
+    }
+  });
 
 export const voidSchema = z.object({
   paymentId: uuid,
